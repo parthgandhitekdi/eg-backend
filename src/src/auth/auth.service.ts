@@ -218,60 +218,84 @@ export class AuthService {
 
     public async resetPasswordUsingId(req, header, response) {
         console.log("req", req)
-        
         const authToken = header.header("authorization");
         const decoded: any = jwt_decode(authToken);
         let keycloak_id = decoded.sub;
         console.log("keycloak_id", keycloak_id)
-        let query = {
+        let query2 = {
             query: `query MyQuery {
-                users_by_pk(id: ${req.id}) {
-                  keycloak_id
-                  last_name
+                users(where: {keycloak_id: {_eq: "${keycloak_id}" }}) {
                   id
-                  first_name
+                  keycloak_id
+                  program_users {
+                    roles {
+                      id
+                      role_type
+                      slag
+                    }
+                  }
                 }
               }`
         }
-        const userRes = await this.hasuraService.postData(query)
-        console.log("userRes", userRes)
-        if (userRes) {
-            const query = {
-                username: 'admin',
-                client_id: 'admin-cli',
-                grant_type: 'client_credentials',
-                client_secret: this.keycloak_admin_cli_client_secret
-            };
-            const token = await this.keycloakService.getAdminKeycloakToken(query, 'master')
-            if (token?.access_token && userRes.data.users_by_pk.keycloak_id) {
+        const userRole = await this.hasuraService.postData(query2)
+        console.log("userRole", userRole.data.users[0].program_users[0].roles.role_type)
+        if (userRole.data.users[0].program_users[0].roles.role_type === 'IP') {
+            let query = {
+                query: `query MyQuery {
+                    users_by_pk(id: ${req.id}) {
+                      keycloak_id
+                      last_name
+                      id
+                      first_name
+                    }
+                  }`
+            }
+            const userRes = await this.hasuraService.postData(query)
+            console.log("userRes", userRes)
+            if (userRes) {
+                const query = {
+                    username: 'admin',
+                    client_id: 'admin-cli',
+                    grant_type: 'client_credentials',
+                    client_secret: this.keycloak_admin_cli_client_secret
+                };
+                const token = await this.keycloakService.getAdminKeycloakToken(query, 'master')
+                if (token?.access_token && userRes.data.users_by_pk.keycloak_id) {
 
-                const resetPasswordRes = await this.keycloakService.resetPassword(userRes.data.users_by_pk.keycloak_id, token.access_token, req.password)
+                    const resetPasswordRes = await this.keycloakService.resetPassword(userRes.data.users_by_pk.keycloak_id, token.access_token, req.password)
 
-                if (resetPasswordRes) {
-                    return response.status(200).json({
-                        success: true,
-                        message: 'Password updated successfully!',
-                        data: {}
-                    });
+                    if (resetPasswordRes) {
+                        return response.status(200).json({
+                            success: true,
+                            message: 'Password updated successfully!',
+                            data: {}
+                        });
+                    } else {
+                        return response.status(200).json({
+                            success: false,
+                            message: 'unable to reset password!',
+                            data: {}
+                        });
+                    }
+
                 } else {
                     return response.status(200).json({
                         success: false,
-                        message: 'unable to reset password!',
+                        message: 'unable to get token',
                         data: {}
                     });
                 }
-
             } else {
                 return response.status(200).json({
                     success: false,
-                    message: 'unable to get token',
+                    message: 'User not found!',
                     data: {}
                 });
             }
         } else {
             return response.status(200).json({
                 success: false,
-                message: 'User not found!',
+                message: "User cann't reset password",
                 data: {}
             });
         }
@@ -407,10 +431,10 @@ export class AuthService {
         console.log("mobileNo", mobileNo)
         console.log("otp", otp)
 
-        let msg = `नमस्ते, प्रगति प्लेटफॉर्म पर सत्यापन/लॉगिन के लिए आपका ओटीपी {#OTP#} है। FEGG`
+        let msg = "नमस्ते, प्रगति प्लेटफॉर्म पर सत्यापन/लॉगिन के लिए आपका ओटीपी {#var#} है। FEGG"
 
         let encodeMsg = encodeURIComponent(msg)
-
+        console.log("encodeMsg", encodeMsg)
 
         let config = {
             method: 'get',
@@ -429,4 +453,5 @@ export class AuthService {
 
 
     }
+
 }
