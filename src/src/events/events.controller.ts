@@ -6,16 +6,24 @@ import {
   Param,
   Patch,
   Post,
+  Res,
+  UseGuards,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
+import { AuthGuard } from 'src/auth/auth.guard';
 import { CreateEventDto } from './dto/create-event.dto';
 import { EventsService } from './events.service';
+import { Response } from 'express';
 
 @Controller('events')
 export class EventsController {
   constructor(private readonly eventsService: EventsService) {}
 
   @Post('/create')
-  create(@Body() createEventDto: CreateEventDto) {
+  @UseGuards(new AuthGuard())
+  @UsePipes(ValidationPipe)
+  create(@Body() createEventDto: CreateEventDto, @Res() response: Response) {
     return this.eventsService.create(createEventDto);
   }
 

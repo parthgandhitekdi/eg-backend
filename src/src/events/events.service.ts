@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { HasuraService } from 'src/hasura/hasura.service';
+import { it } from 'node:test';
+import { HasuraService } from 'src/services/hasura/hasura.service';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 
@@ -33,9 +34,38 @@ export class EventsService {
     'updated_by',
     'user_id',
   ];
-  constructor(private readonly hasuraService: HasuraService) {}
+  constructor(private readonly hasuraService: HasuraService) { }
 
-  create(req: any) {
+  public async create(req: any) {
+
+    console.log("req", req)
+    let user_id_arr = req.user_id
+
+    const query = []
+
+    for (const iterator of user_id_arr) {
+      
+      let obj = {
+        "user_id": iterator,
+        "context": req.context,
+        "context_id": req.context_id,
+        "created_by": req.created_by,
+        "end_date": req.end_date,
+        "end_time": req.end_time,
+        "location": req.location,
+        "location_type": req.location_type,
+        "start_date": req.start_date,
+        "start_time": req.start_time,
+        "updated_by": req.updated_by,
+        "type": req.type,
+      }
+
+      console.log("obj")
+      query.push(obj)
+    }
+
+    console.log("query", query)
+
     return this.hasuraService.create(this.table, req, this.returnFields);
   }
 

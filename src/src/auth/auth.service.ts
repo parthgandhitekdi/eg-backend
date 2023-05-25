@@ -339,7 +339,124 @@ export class AuthService {
 
     }
 
+    public async isUserExist(req, response) {
+        // Set User table name
+        const tableName = 'users';
 
+        // Calling hasura common method find all
+        const data_exist = await this.hasuraService.findAll(tableName, req);
+        let userExist = data_exist.data.users;
+
+        // Check wheather user is exist or not based on response
+        if (userExist.length > 0) {
+            return response.status(200).send({
+                success: true,
+                message: 'User exist',
+                data: {},
+            });
+        } else {
+            return response.status(200).send({
+                success: false,
+                message: 'User not exist',
+                data: {},
+            });
+        }
+    }
+
+    public async register(body, response) {
+
+        console.log("body", body)
+
+        //const password = `@${this.helper.generateRandomPassword()}`;
+        const password = body?.mobile;
+        let username = `${body.first_name}`;
+        if (body?.last_name) {
+            username += `_${body.last_name.charAt(0)}`;
+        }
+        username += `_${body.mobile}`;
+        const data_to_create_user = {
+            enabled: 'true',
+            firstName: body?.first_name,
+            lastName: body?.last_name,
+            username: username.toLowerCase(),
+            credentials: [
+                {
+                    type: 'password',
+                    value: password,
+                    temporary: false,
+                },
+            ],
+            groups: [`${body.role}`],
+        };
+
+        console.log("data_to_create_user", data_to_create_user)
+
+        const query = {
+            username: 'admin',
+            client_id: 'admin-cli',
+            grant_type: 'client_credentials',
+            client_secret: this.keycloak_admin_cli_client_secret
+        };
+        const token = await this.keycloakService.getAdminKeycloakToken(query, 'master')
+        if (token?.access_token) {
+            const registerUserRes = await this.keycloakService.registerUser(data_to_create_user, token.access_token)
+            console.log("registerUserRes", registerUserRes)
+            if (registerUserRes.error) {
+                if(registerUserRes.error.message == 'Request failed with status code 409') {
+                    return response.status(200).json({
+                        success: false,
+                        message: "User already exists!",
+                        data: {}
+                    });
+                } else {
+                    return response.status(200).json({
+                        success: false,
+                        message: registerUserRes.error.message,
+                        data: {}
+                    });
+                }
+                
+            } else if (registerUserRes.headers.location) {
+                
+                const split = registerUserRes.headers.location.split('/');
+                const keycloak_id = split[split.length - 1];
+                body.keycloak_id = keycloak_id;
+                if(body.role_fields.parent_ip) {
+                    body.parent_ip = body.role_fields.parent_ip
+                }
+                if(body.role_fields.faciliator_id) {
+                    body.faciliator_id = body.role_fields.faciliator_id
+                }
+                console.log("body 415", body)
+                const result = await this.newCreate(body);
+                console.log("result", result)
+
+                return response.status(200).send({
+                    success: true,
+                    message: 'User created successfully',
+                    data: {
+                        user: result?.data,
+                        keycloak_id: keycloak_id,
+                        username: username,
+                        password: password,
+                    },
+                });
+            } else {
+                return response.status(200).json({
+                    success: false,
+                    message: 'Unable to create user in keycloak',
+                    data: {}
+                });
+            }
+        } else {
+            return response.status(200).json({
+                success: false,
+                message: 'Unable to get keycloak token',
+                data: {}
+            });
+        }
+
+    }
     //helper function
     public async sendOtpSMS(mobile, reason) {
 
@@ -431,7 +548,7 @@ export class AuthService {
         console.log("mobileNo", mobileNo)
         console.log("otp", otp)
 
-        let msg = "नमस्ते, प्रगति प्लेटफॉर्म पर सत्यापन/लॉगिन के लिए आपका ओटीपी {#var#} है। FEGG"
+        let msg = "नमस्ते, प्रगति प्लेटफॉर्म पर सत्यापन/लॉगिन के लिए आपका ओटीपी <arg1> है।"
 
         let encodeMsg = encodeURIComponent(msg)
         console.log("encodeMsg", encodeMsg)
@@ -439,9 +556,9 @@ export class AuthService {
         let config = {
             method: 'get',
             maxBodyLength: Infinity,
-            url: `${process.env.SMS_GATEWAY_BASE_URL}/VoicenSMS/webresources/CreateSMSCampaignGet?ukey=${process.env.SMS_GATEWAY_API_KEY}&msisdnlist=phoneno:${mobileNo},arg1:${otp}&language=2&credittype=7&senderid=${process.env.SENDER_ID}&templateid=1491&message=${encodeMsg}&isschd=false&isrefno=true&filetype=1`,
-            headers: {}
-        };
+            url: `${process.env.SMS_GATEWAY_BASE_URL}/VoicenSMS/webresources/CreateSMSCampaignGet?ukey=${process.env.SMS_GATEWAY_API_KEY}&msisdnlist=phoneno:${mobileNo},arg1:${otp}&language=2&credittype=8&senderid=FEGGPR&templateid=32490&message=%E0%A4%A8%E0%A4%AE%E0%A4%B8%E0%A5%8D%E0%A4%A4%E0%A5%87,%20%E0%A4%AA%E0%A5%8D%E0%A4%B0%E0%A4%97%E0%A4%A4%E0%A4%BF%20%E0%A4%AA%E0%A5%8D%E0%A4%B2%E0%A5%87%E0%A4%9F%E0%A4%AB%E0%A5%89%E0%A4%B0%E0%A5%8D%E0%A4%AE%20%E0%A4%AA%E0%A4%B0%20%E0%A4%B8%E0%A4%A4%E0%A5%8D%E0%A4%AF%E0%A4%BE%E0%A4%AA%E0%A4%A8/%E0%A4%B2%E0%A5%89%E0%A4%97%E0%A4%BF%E0%A4%A8%20%E0%A4%95%E0%A5%87%20%E0%A4%B2%E0%A4%BF%E0%A4%8F%20%E0%A4%86%E0%A4%AA%E0%A4%95%E0%A4%BE%20%E0%A4%93%E0%A4%9F%E0%A5%80%E0%A4%AA%E0%A5%80%20%3Carg1%3E%20%E0%A4%B9%E0%A5%88%E0%A5%A4%20FEGG&isschd=false&isrefno=true&filetype=1`,
+            headers: { }
+          };
 
         try {
             const res = await axios.request(config)
@@ -452,6 +569,197 @@ export class AuthService {
         }
 
 
+    }
+
+    async newCreate(req: any) {
+        const tableName = 'users';
+        const newR = await this.hasuraService.q(tableName, req, [
+            'first_name',
+            'last_name',
+            'mobile',
+            'email_id',
+            'keycloak_id',
+        ]);
+        const user_id = newR[tableName]?.id;
+        if (user_id) {
+            await this.hasuraService.q(`program_faciltators`, { ...req, user_id }, [
+                'parent_ip',
+                'user_id',
+            ]);
+        }
+        return await this.userById(user_id);
+    }
+
+    async userById(id: any) {
+        var data = {
+            query: `query searchById {        
+            users_by_pk(id: ${id}) {
+              first_name
+              id
+              last_name
+              dob
+              aadhar_token
+              address
+              block_id
+              block_village_id
+              created_by
+              district_id
+              email_id
+              gender
+              lat
+              long
+              mobile
+              password
+              state_id
+              updated_by
+              profile_url
+              state
+              district
+              block
+              village
+              grampanchayat
+              program_users {
+                id
+                organisation_id
+                academic_year_id
+                program_id
+                role_id
+                status
+                user_id
+              }
+              core_faciltator {
+                created_by
+                device_ownership
+                device_type
+                id
+                pan_no
+                refreere
+                sourcing_channel
+                updated_by
+                user_id
+              }
+              experience {
+                description
+                end_year
+                experience_in_years
+                institution
+                start_year
+                organization
+                role_title
+                user_id
+                type
+              }
+              program_faciltators {
+                parent_ip
+                availability
+                has_social_work_exp
+                id
+                police_verification_done
+                program_id
+                social_background_verified_by_neighbours
+                user_id
+                village_knowledge_test
+                status
+                form_step_number
+                created_by
+                updated_by
+              }
+              qualifications {
+                created_by
+                end_year
+                id
+                institution
+                qualification_master_id
+                start_year
+                updated_by
+                user_id
+                qualification_master {
+                  context
+                  context_id
+                  created_by
+                  id
+                  name
+                  type
+                  updated_by
+                }
+              }
+              interviews {
+                id
+                owner_user_id
+                end_date_time
+                comment
+                created_at
+                created_by
+                start_date_time
+                status
+                title
+                updated_at
+                updated_by
+                user_id
+                location_type
+                location
+                owner {
+                  first_name
+                  last_name
+                  id
+                }
+              }
+              events {
+                context
+                context_id
+                created_by
+                end_date
+                end_time
+                id
+                location
+                location_type
+                start_date
+                start_time
+                updated_by
+                user_id
+              }
+              documents(order_by: {id: desc}){
+                id
+                user_id
+                name
+                doument_type
+                document_sub_type
+              }
+            }}`,
+        };
+
+        const response = await this.hasuraService.postData(data);
+
+        let result = response?.data?.users_by_pk;
+        if (result?.program_faciltators && result?.program_faciltators[0]) {
+            result.program_faciltators = result.program_faciltators[0];
+        } else {
+            result = { ...result, program_faciltators: {} };
+        }
+        let mappedResponse = result;
+
+        if (result?.experience) {
+            mappedResponse = {
+                ...mappedResponse,
+                ['experience']: result?.experience.filter(
+                    (e: any) => e.type == 'experience',
+                ),
+            };
+
+            mappedResponse = {
+                ...mappedResponse,
+                ['vo_experience']: result?.experience.filter(
+                    (e: any) => e.type == 'vo_experience',
+                ),
+            };
+        }
+
+
+        return {
+            statusCode: 200,
+            message: 'Ok.',
+            data: mappedResponse,
+        };
     }
 
 }

@@ -1,5 +1,5 @@
 import { HttpService } from '@nestjs/axios';
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AxiosRequestConfig, AxiosResponseHeaders, RawAxiosResponseHeaders } from 'axios';
 import { lastValueFrom, map } from 'rxjs';
@@ -65,12 +65,12 @@ export class KeycloakService {
             console.log("password updated")
             return "password updated";
         } catch (e) {
-            console.log("getAdminKeycloakToken", e.message)
+            console.log("resetPassword", e.message)
         }
-        
+
     }
 
-    public async createUser(userData): Promise<{ [key: string]: any }>  {
+    public async createUser(userData): Promise<{ [key: string]: any }> {
         const data = {
             username: 'admin',
             client_id: 'admin-cli',
@@ -87,12 +87,12 @@ export class KeycloakService {
 
                 const { headers, status } = await lastValueFrom(
                     this.httpService.post(url, data, {
-                    headers: {
-                        'Content-Type': 'application/json',
-                        Authorization: `Bearer ${adminResultData.access_token}`,
-                    }
+                        headers: {
+                            'Content-Type': 'application/json',
+                            Authorization: `Bearer ${adminResultData.access_token}`,
+                        }
                     })
-                    .pipe(map((res) => res))
+                        .pipe(map((res) => res))
                 );
                 return {
                     headers,
@@ -102,9 +102,45 @@ export class KeycloakService {
                 throw new BadRequestException('Error while creating user !');
             }
         } catch (e) {
-            console.log(e);
-            throw e;
+            console.log("error 105"), e.message;
+            throw new HttpException(e.message, HttpStatus.CONFLICT, {
+                cause: e,
+            });
+
         }
+    }
+    
+
+    public async registerUser(data, token) {
+        console.log("inside registerUser")
+
+        const url = `${this.keycloak_url}/admin/realms/eg-sso/users`;
+
+        const config: AxiosRequestConfig = {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+        };
+
+        let registerUserRes: any;
+        try {
+            const observable = this.httpService.post(url, data, config);
+
+            const promise = observable.toPromise();
+
+            const { headers, status } = await promise;
+            console.log("registerUser response", headers)
+            registerUserRes = {
+                headers,
+                status
+            }
+            // return response.data;
+        } catch (err) {
+            console.log("registerUser err", err)
+            registerUserRes = {error: err}
+        }
+        return registerUserRes;
     }
 
 }

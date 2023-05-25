@@ -351,73 +351,97 @@ if(!result){
   async create(req: any, update = false, request) {
     const user=await this.userService.ipUserInfo(request);
     const { data: beneficiaryUser} = await this.userById(req.id);
-    let i = 0,
-    response = [];
-    let objKey = Object.keys(req);
-    const userArr = [
-      'first_name',
-      'last_name',
-      'gender',
-      'dob',
-      'address',
-      'aadhar_token',
-      'keycloak_id',
-      'profile_url',
-      'block',
-      'district',
-      'state',
-      'village',
-      'grampanchayat'
-    ];
-    let user_id = req?.id ? req?.id : null;
-    const keyExist = userArr.filter((e) => objKey.includes(e));
-    if (keyExist.length > 0) {
-      const tableName = 'users';
-      const newR = await this.hasuraService.q(tableName, req, userArr, update);
-      user_id = newR[tableName]?.id ? newR[tableName]?.id : user_id;
-      response[i++] = newR;
-    }
-    if (user_id) {
-      const extendedUserArr = [
-        'user_id',
-        'social_category',
-        'marital_status'
-      ];
-      const extendedUserkeyExist = extendedUserArr.filter((e) => objKey.includes(e));
-      if (extendedUserkeyExist.length > 0) {
-        response[i++] = await this.hasuraService.q(
-          'extended_users',
-          {
-            ...req,
-            id: beneficiaryUser?.extended_users[0]?.id ? beneficiaryUser?.extended_users[0]?.id : null,
-            user_id,
-          },
-          extendedUserArr,
-          update,
-        );
+    const user_id = req?.id;
+    const PAGE_WISE_UPDATE_TABLE_DETAILS = {
+      'basic': {
+        'users': [
+          'first_name',
+          'last_name',
+          'middle_name',
+          'dob'
+        ]
+      },
+      'contact': {
+        'users': [
+          'mobile',
+          'alternative_mobile_number',
+          'email_id'
+        ],
+        'core_beneficiaries': [
+          'user_id',
+          'device_ownership',
+          'device_type',
+          'alternative_device_ownership',
+          'alternative_device_type'
+        ]
+      },
+      'address': {
+        'users': [
+          'state',
+          'district',
+          'block',
+          'village',
+          'grampanchayat',
+          'address'
+        ]
+      },
+      'personal': {
+        'extended_users': [
+          'user_id',
+          'social_category',
+          'marital_status'
+        ]
+      },
+      'family': {
+        'core_beneficiaries': [
+          'user_id',
+          'father_first_name',
+          'father_middle_name',
+          'father_last_name',
+          'mother_first_name',
+          'mother_middle_name',
+          'mother_last_name'
+        ]
+      },
+      'education': {
+        'core_beneficiaries': [
+          'user_id',
+          'type_of_learner',
+          'last_standard_of_education',
+          'last_standard_of_education_year',
+          'previous_school_type',
+          'reason_of_leaving_education'
+        ]
+      },
+      'further_studies': {
+        'core_beneficiaries': [
+          'user_id',
+          'career_aspiration',
+          'career_aspiration_details'
+        ]
       }
-      const coreBeneficiariesArr = [
-        'type_of_learner',
-        'last_standard_of_education_year',
-        'last_standard_of_education',
-        'reason_of_leaving_education',
-        'user_id',
-        'connect_via_refrence',
-        'mobile_ownership',
-        'last_school_type',
-        'previous_school_type',
-        'enrollement_status',
-        'document_id',
-        'device_type',
-        'device_ownership',
-        'enrolled_for_board',
-        'career_aspiration',
-        'learner_wish_to_pursue_education'
-      ];
-      const coreBeneficiarieskeyExist = coreBeneficiariesArr.filter((e) => objKey.includes(e));
-      if (coreBeneficiarieskeyExist.length > 0) {
-        response[i++] = await this.hasuraService.q(
-          'core_beneficiaries',
+    }
+    
+    switch(req.edit_page_type) {
+      case 'basic': {
+        // Update Users table data
+        const userArr = PAGE_WISE_UPDATE_TABLE_DETAILS.basic.users;
+        const tableName = 'users';
+        await this.hasuraService.q(tableName, req, userArr, update);
+        break;
+      }
+      
+      case 'contact': {
+        // Update Users table data
+        const userArr = PAGE_WISE_UPDATE_TABLE_DETAILS.contact.users;
+        let tableName = 'users';
+        await this.hasuraService.q(tableName, req, userArr, update);
+
+        // Update Core Beneficiaries table data
+        const coreBeneficiaryArr = PAGE_WISE_UPDATE_TABLE_DETAILS.contact.core_beneficiaries;
+        tableName = 'core_beneficiaries';
+        await this.hasuraService.q(
+          tableName,
           {
             ...req,
             id: beneficiaryUser?.core_beneficiaries[0]?.id
@@ -425,9 +449,95 @@ if(!result){
               : null,
             user_id: user_id,
           },
-          coreBeneficiariesArr,
-          update,
+          coreBeneficiaryArr,
+          update
         );
+
+        break;
+      }
+
+      case 'address': {
+        // Update Users table data
+        const userArr = PAGE_WISE_UPDATE_TABLE_DETAILS.address.users;
+        let tableName = 'users';
+        await this.hasuraService.q(tableName, req, userArr, update);
+        break;
+      }
+
+      case 'personal': {
+        // Update Extended Users table data
+        const userArr = PAGE_WISE_UPDATE_TABLE_DETAILS.personal.extended_users;
+        let tableName = 'extended_users';
+        await this.hasuraService.q(
+          tableName,
+          {
+            ...req,
+            id: beneficiaryUser?.extended_users[0]?.id
+              ? beneficiaryUser?.extended_users[0]?.id
+              : null,
+            user_id,
+          },
+          userArr,
+          update
+        );
+        break;
+      }
+
+      case 'family': {
+        // Update Core beneficiaries table data
+        const userArr = PAGE_WISE_UPDATE_TABLE_DETAILS.family.core_beneficiaries;
+        let tableName = 'core_beneficiaries';
+        await this.hasuraService.q(
+          tableName,
+          {
+            ...req,
+            id: beneficiaryUser?.core_beneficiaries[0]?.id
+              ? beneficiaryUser?.core_beneficiaries[0]?.id
+              : null,
+            user_id,
+          },
+          userArr,
+          update
+        );
+        break;
+      }
+
+      case 'education': {
+        // Update Core beneficiaries table data
+        const userArr = PAGE_WISE_UPDATE_TABLE_DETAILS.education.core_beneficiaries;
+        let tableName = 'core_beneficiaries';
+        await this.hasuraService.q(
+          tableName,
+          {
+            ...req,
+            id: beneficiaryUser?.core_beneficiaries[0]?.id
+              ? beneficiaryUser?.core_beneficiaries[0]?.id
+              : null,
+            user_id,
+          },
+          userArr,
+          update
+        );
+        break;
+      }
+
+      case 'further_studies': {
+        // Update Core beneficiaries table data
+        const userArr = PAGE_WISE_UPDATE_TABLE_DETAILS.further_studies.core_beneficiaries;
+        let tableName = 'core_beneficiaries';
+        await this.hasuraService.q(
+          tableName,
+          {
+            ...req,
+            id: beneficiaryUser?.core_beneficiaries[0]?.id
+              ? beneficiaryUser?.core_beneficiaries[0]?.id
+              : null,
+            user_id,
+          },
+          userArr,
+          update
+        );
+        break;
       }
     }
     return this.userById(user_id);
@@ -464,6 +574,7 @@ if(!result){
         users_by_pk(id: ${id}) {
           id
           first_name
+          middle_name
           last_name              
           dob
           mobile
@@ -516,6 +627,15 @@ if(!result){
             document_id
             enrolled_for_board
             enrollement_status
+            father_first_name
+            father_middle_name
+            father_last_name
+            mother_first_name
+            mother_middle_name
+            mother_last_name
+            career_aspiration_details
+            alternative_device_ownership
+            alternative_device_type
           }
           extended_users {
             marital_status
