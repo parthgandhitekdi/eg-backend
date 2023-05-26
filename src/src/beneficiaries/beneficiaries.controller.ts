@@ -1,17 +1,18 @@
 import {
-    Body,
-    Controller,
-    Delete,
-    Get,
-    Param,
-    Patch,
-    Post,
-    Put,
-    Req,
-    UsePipes,
-    ValidationPipe
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Put,
+  Req,
+  Res,
+  UsePipes,
+  ValidationPipe
 } from '@nestjs/common';
-import { CreateEventDto } from 'src/events/dto/create-event.dto';
+import { Response } from 'express';
 import { BeneficiariesService } from './beneficiaries.service';
 import { RegisterBeneficiaryDto } from './dto/register-beneficiary.dto';
 
@@ -36,13 +37,13 @@ export class BeneficiariesController {
 
   @Post()
   findAll(@Body() request: Record<string, any>,
-  @Req() req:any) {
-    return this.beneficiariesService.findAll(request,req);
+  @Req() req:any, @Res() response: Response) {
+    return this.beneficiariesService.findAll(request,req,response);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.beneficiariesService.findOne(+id);
+  findOne(@Param('id') id: string, @Res() response: Response) {
+    return this.beneficiariesService.findOne(+id,response);
   }
 
   @Delete(':id')

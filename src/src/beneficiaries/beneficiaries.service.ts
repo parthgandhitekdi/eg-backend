@@ -1,19 +1,18 @@
 import { HttpService } from '@nestjs/axios';
-import { BadRequestException, HttpException, HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
-import { lastValueFrom, map } from 'rxjs';
+import { BadRequestException, HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { UserService } from 'src/user.service';
-import { UserHelperService } from '../helper/userHelper.service';
 import { HasuraService } from '../hasura/hasura.service';
+import { UserHelperService } from '../helper/userHelper.service';
 import { HasuraService as HasuraServiceFromServices } from '../services/hasura/hasura.service';
 import { KeycloakService } from '../services/keycloak/keycloak.service';
-import { ConfigService } from '@nestjs/config';
-
 @Injectable()
 export class BeneficiariesService {
     public url = process.env.HASURA_BASE_URL;
 
  
     constructor(
+       
       private readonly httpService: HttpService,
       private userService:UserService,
       private helper: UserHelperService,
@@ -35,14 +34,9 @@ export class BeneficiariesService {
         
     ]
       
-    public async findAll(body: any,req:any) {
-
-      // try {
+    public async findAll(body: any,req:any,resp:any) {
         const user=await this.userService.ipUserInfo(req)
-      // } catch (error) {
-      //   throw new UnauthorizedException();
-      // }
-            const { filters } = body;
+            const { status,sortType } = body;
             const page = body.page ? body.page : '1';
             const limit = body?.limit ? body?.limit : '10';
         
@@ -50,15 +44,10 @@ export class BeneficiariesService {
             if (page > 1 && limit) {
               offset = parseInt(limit) * (page - 1);
             }
-        
-            let query = '';
-            if (filters) {
-              Object.keys(filters).forEach((e) => {
-                if (filters[e] && filters[e] != '') {
-                  query += `{${e}:{_eq:"${filters[e]}"} }`;
-                }
-              });
-            }
+            let query =''
+        if(status){
+          let query = `{beneficiaries:{status:{_eq:${status}}}}`;
+        }
             var data={
                 query:`query MyQuery($limit:Int, $offset:Int) {
                     users_aggregate( where:   
@@ -67,7 +56,8 @@ export class BeneficiariesService {
                               {
                                 beneficiaries: {facilitator_id: {_eq: ${user.data.id}}}
                               },
-                              ${query}                           
+                             ${query}
+                                                  
                           ]
                         }){
                           aggregate{
@@ -81,14 +71,14 @@ export class BeneficiariesService {
                             {
                               beneficiaries: {facilitator_id: {_eq: ${user.data.id}}}
                             },
-                            ${query}
+                            ${query} 
                             
                         ]
                       },
                       limit: $limit,
                       offset: $offset,
                       order_by: {
-                        created_at: desc
+                        created_at: ${sortType}
                       }
                     ) {
                         id
@@ -115,15 +105,23 @@ export class BeneficiariesService {
                         state_id
                         updated_by
                         profile_url
-                        beneficiaries {
-                            id
-                            program_id
-                            rsos_id
-                            updated_by
-                            user_id
-                            facilitator_id
-                            created_by
-                            beneficiaries_found_at
+                        beneficiaries{
+                          id
+                          enrollment_status
+                          enrolled_for_board
+                          type_of_enrollement 
+                          subjects
+                          academic_year_id
+                    payment_receipt_document_id
+                          program_id
+                          enrollment_number
+                          status
+                        documents_status
+                          updated_by
+                          user_id
+                          facilitator_id
+                          created_by
+                          beneficiaries_found_at
                           }
                       core_beneficiaries {
                         career_aspiration
@@ -162,9 +160,7 @@ export class BeneficiariesService {
                          
                   }`
             }
-
             const response = await this.hasuraServiceFromServices.getData(data);
-        
             let result = response?.data?.users;
         
             let mappedResponse = result;
@@ -172,15 +168,18 @@ export class BeneficiariesService {
             const totalPages = Math.ceil(count / limit);
         
             if(!mappedResponse || mappedResponse.length<1){
-                return {
-                    statusCode: 404,
-                    message:'Benificiaries Not Found',
-                 }
+              return resp.status(404).send({
+                success: false,
+                status: 'Not Found',
+                message: 'Benificiaries Not Found',
+                data: {},
+              });
             }else {
-                return {
-                    statusCode: 200,
-                    message: 'Ok.',
-                    totalCount: count,
+                  return  resp.status(200).json({
+                    success: true,
+                    message: 'Benificiaries found successfully!',
+                    data: {
+                      totalCount: count,
                     data: mappedResponse?.map((e) => ({
                       ...e,
                       ['program_faciltators']: e?.['program_faciltators']?.[0],
@@ -188,13 +187,14 @@ export class BeneficiariesService {
                     limit,
                     currentPage: page,
                     totalPages: `${totalPages}`,
-                  };
+                    },
+            })
             }
             
           }    
 
 
- public async findOne(id: number) {
+ public async findOne(id: number,resp:any) {
      var data={
         query:`query searchById {
             users_by_pk(id: ${id}) {
@@ -224,13 +224,22 @@ export class BeneficiariesService {
               long
               block_village_id
               beneficiaries {
-                beneficiaries_found_at
-                created_by
-                facilitator_id
                 id
+                enrollment_status
+                enrolled_for_board
+                type_of_enrollement 
+                subjects
+                academic_year_id
+          payment_receipt_document_id
                 program_id
-                rsos_id
+                enrollment_number
+                status
+              documents_status
                 updated_by
+                user_id
+                facilitator_id
+                created_by
+                beneficiaries_found_at
               }
               core_beneficiaries {
                 career_aspiration
@@ -271,19 +280,23 @@ export class BeneficiariesService {
         const response = await this.hasuraServiceFromServices.getData(data);
           let result = response?.data?.users_by_pk;
 if(!result){
- return {
-    statusCode: 404,
-    message:'Benificiaries Not Found',
- }
+return resp.status(404).send({
+    success: false,
+    status: 'Not Found',
+    message: 'Benificiaries Not Found',
+    data: {},
+  });
+
 }else {
-    return {
-        statusCode: 200,
-        message: 'Ok.',
-        data: result,
-      };
-}
+     return  resp.status(200).json({
+        success: true,
+        message: 'Benificiaries found successfully!',
+        data: {result:result},
+})
           
      }
+    }
+     
      
   
 
@@ -419,6 +432,20 @@ if(!result){
           'career_aspiration',
           'career_aspiration_details'
         ]
+      },
+      'enrollement':{
+        'beneficiaries':[
+          "enrollment_number",
+          "user_id",
+          "enrollment_status",
+          "enrolled_for_board",
+          "type_of_enrollement", 
+          "subjects" ,
+          "program_id",
+          "facilitator_id",
+          'academic_year_id',
+          "payment_receipt_document_id"
+        ]
       }
     }
     
@@ -539,6 +566,30 @@ if(!result){
         );
         break;
       }
+      case 'enrollement':{
+        // Update enrollement data in Beneficiaries table 
+                const userArr = PAGE_WISE_UPDATE_TABLE_DETAILS.enrollement.beneficiaries;
+        
+              const programDetails=beneficiaryUser.beneficiaries.find((data) => req.user_id==data.user_id&&req.academic_year_id==data.academic_year_id)
+             let tableName = 'beneficiaries';
+             
+                 await this.hasuraService.q(
+                  tableName,
+                  {
+                  ...req,
+                    id: programDetails?.id
+                      ? programDetails.id
+                      : null,
+                    user_id: user_id,
+        
+                    subjects:JSON.stringify(req.subjects)
+                  },
+                  userArr,
+                  update,
+                );
+                
+              }  
+        
     }
     return this.userById(user_id);
   }
@@ -603,8 +654,16 @@ if(!result){
             created_by
             facilitator_id
             id
+            academic_year_id
+            id
+            enrollment_number
+            enrollment_status
+            enrolled_for_board
+            type_of_enrollement
+            subjects
+            payment_receipt_document_id
             program_id
-            rsos_id
+            
             updated_by
           }
           core_beneficiaries {
@@ -651,18 +710,12 @@ if(!result){
     };
 
     const response = await this.hasuraServiceFromServices.getData(data);
-
     let result = response?.data?.users_by_pk;
-    if (result?.beneficiaries && result?.beneficiaries[0]) {
-      result.beneficiaries = result.beneficiaries[0];
-    } else {
-      result = { ...result, beneficiaries: {} };
-    }
     let mappedResponse = result;
-
-    return {
-      message: 'User data fetched successfully.',
-      data: mappedResponse,
-    };
+    return response.status(200).json({
+      success: true,
+      message: "User data fetched successfully!",
+      data: mappedResponse
+      });
   }
 }
