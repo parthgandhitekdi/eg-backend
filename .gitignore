@@ -17,6 +17,9 @@ build/*
 builds/*
 dist/*
 
+# G cloud config
+educate-girls-*.json
+
 # Env files
 .env
 .env.*

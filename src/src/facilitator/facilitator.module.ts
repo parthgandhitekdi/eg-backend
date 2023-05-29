@@ -2,13 +2,14 @@ import { Module } from "@nestjs/common";
 import { HttpModule } from '@nestjs/axios';
 
 import { HasuraModule } from '../services/hasura/hasura.module';
-import { EnumModule } from '../enum/enum.module'
+import { EnumModule } from '../enum/enum.module';
+import { UserModule } from 'src/user.module';
 
 import { FacilitatorService } from './facilitator.service';
 import { FacilitatorController } from './facilitator.controller';
 
 @Module({
-    imports: [HttpModule, HasuraModule, EnumModule],
+    imports: [UserModule, HttpModule, HasuraModule, EnumModule],
     providers: [FacilitatorService],
     controllers: [FacilitatorController],
     exports: [],

@@ -1,4 +1,4 @@
-import { Body, Controller, Post, UsePipes, ValidationPipe } from '@nestjs/common';
+import { Body, Controller, Post, Req, UsePipes, ValidationPipe } from '@nestjs/common';
 
 import { FacilitatorService } from './facilitator.service';
 
@@ -39,8 +39,9 @@ export class FacilitatorController {
     @Post('/')
     @UsePipes(ValidationPipe)
     async getFacilitators(
+      @Req() req: any,
       @Body() body: FilterFacilitatorDto
     ) {
-      return this.facilitatorService.getFacilitators(body);
+      return this.facilitatorService.getFacilitators(req, body);
     }
 }
