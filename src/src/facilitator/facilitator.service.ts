@@ -139,6 +139,47 @@ export class FacilitatorService {
       paramsQuery = '(' + paramsQueryArray.join(',') + ')';
     }
 
+    let sortQuery = `{ created_at: desc }`;
+
+    if (body.hasOwnProperty('sort')) {
+      // Supported sortings: name, qualification, region, eligibility, status, comments
+      let sortField = body.sort.split('|')[0]?.trim();
+      let sortType = body.sort.split('|')[1]?.trim();
+      let possibleSortFields = ['name', 'qualification', 'region', 'eligibility', 'status', 'comments'];
+      let possibleSortTypes = ['asc', 'desc'];
+      if (
+          possibleSortFields.includes(sortField)
+        && possibleSortTypes.includes(sortType)
+      ) {
+        switch (sortField) {
+          case 'name': {
+            sortQuery = `{ first_name: ${sortType} }`;
+            break;
+          }
+          case 'qualification': {
+            sortQuery = `{ qualifications_aggregate: { count: ${sortType} } }`;
+            break;
+          }
+          case 'region': {
+            sortQuery = `{ block: ${sortType} }`;
+            break;
+          }
+          case 'eligibility': {
+            
+            break;
+          }
+          case 'status': {
+            sortQuery = `{ program_faciltators_aggregate: { count: ${sortType} } }`;
+            break;
+          }
+          case 'comments': {
+            
+            break;
+          }
+        }
+      }
+    }
+
     const data = {
       query: `query MyQuery ${paramsQuery} {
         users_aggregate (where: ${filterQuery}) {
@@ -147,7 +188,7 @@ export class FacilitatorService {
           }
         }
 
-        users (where: ${filterQuery}, order_by: {created_at: desc}) {
+        users ( where: ${filterQuery}, order_by: ${sortQuery} ) {
           first_name
           id
           last_name

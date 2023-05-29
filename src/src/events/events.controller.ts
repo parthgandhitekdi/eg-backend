@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Req,
   Res,
   UseGuards,
   UsePipes,
@@ -14,7 +15,7 @@ import {
 import { AuthGuard } from 'src/auth/auth.guard';
 import { CreateEventDto } from './dto/create-event.dto';
 import { EventsService } from './events.service';
-import { Response } from 'express';
+import { Request,Response } from 'express';
 
 @Controller('events')
 export class EventsController {
@@ -23,8 +24,14 @@ export class EventsController {
   @Post('/create')
   @UseGuards(new AuthGuard())
   @UsePipes(ValidationPipe)
-  create(@Body() createEventDto: CreateEventDto, @Res() response: Response) {
-    return this.eventsService.create(createEventDto);
+  create(@Body() createEventDto: CreateEventDto, @Req() header: Request, @Res() response: Response) {
+    return this.eventsService.create(createEventDto, header, response);
+  }
+
+  @Get('/list')
+  @UseGuards(new AuthGuard())
+  getEventsList(@Body() body: any, @Req() header: Request, @Res() response: Response) {
+    return this.eventsService.getEventsList(body, header, response);
   }
 
   @Post()
