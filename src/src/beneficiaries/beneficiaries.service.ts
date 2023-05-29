@@ -208,6 +208,7 @@ export class BeneficiariesService {
             users_by_pk(id: ${id}) {
               id
               first_name
+              middle_name
               last_name              
               dob
               mobile
@@ -382,6 +383,11 @@ return resp.status(404).send({
           'dob'
         ]
       },
+      'add_aadhaar': {
+        'users': [
+          'aadhar_no'
+        ]
+      },
       'add_contact': {
         'core_beneficiaries': [
           'user_id',
@@ -488,6 +494,14 @@ return resp.status(404).send({
       case 'edit_basic': {
         // Update Users table data
         const userArr = PAGE_WISE_UPDATE_TABLE_DETAILS.edit_basic.users;
+        const tableName = 'users';
+        await this.hasuraService.q(tableName, req, userArr, update);
+        break;
+      }
+
+      case 'add_aadhaar': {
+        // Update Users table data
+        const userArr = PAGE_WISE_UPDATE_TABLE_DETAILS.add_aadhaar.users;
         const tableName = 'users';
         await this.hasuraService.q(tableName, req, userArr, update);
         break;
