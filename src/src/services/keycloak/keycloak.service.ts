@@ -112,7 +112,7 @@ export class KeycloakService {
     
 
     public async registerUser(data, token) {
-        console.log("inside registerUser")
+        console.log("inside registerUser", data)
 
         const url = `${this.keycloak_url}/admin/realms/eg-sso/users`;
 
@@ -138,6 +138,40 @@ export class KeycloakService {
             // return response.data;
         } catch (err) {
             console.log("registerUser err", err)
+            registerUserRes = {error: err}
+        }
+        return registerUserRes;
+    }
+
+    public async findUser(data, token) {
+        console.log("inside findUser", data)
+
+        const url = `${this.keycloak_url}/admin/realms/eg-sso/users?username=${data}`;
+
+        const config: AxiosRequestConfig = {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+        };
+
+        let registerUserRes: any;
+        try {
+            const observable = this.httpService.get(url, config);
+
+            const promise = observable.toPromise();
+
+            // const { headers, status } = await promise;
+            // console.log("registerUser response", headers)
+            // registerUserRes = {
+            //     headers,
+            //     status
+            // }
+            const response = await promise;
+            console.log("response 171", response.data)
+            return response.data;
+        } catch (err) {
+            console.log("findUser err", err)
             registerUserRes = {error: err}
         }
         return registerUserRes;

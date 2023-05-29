@@ -17,28 +17,32 @@ import { KeycloakModule } from './services/keycloak/keycloak.module';
 import { S3Module } from './services/s3/s3.module';
 import { UploadFileModule } from './upload-file/upload-file.module';
 import { UserModule } from './user.module';
+import { AttendancesModule } from './attendances/attendances.module';
+import { SubjectsModule } from './subjects/subjects.module';
 @Module({
-    imports: [
-        ConfigModule.forRoot({ isGlobal: true }),
-        {
-            ...HttpModule.register({}),
-            global: true,
-        },
-        HelperModule,
-        EnumModule,
-        BeneficiariesModule,
-        AuthModule,
-        UserModule,
-        InterviewModule,
-        KeycloakModule,
-        FacilitatorModule,
-        EventsModule,
-        HasuraModule,
-        S3Module,
-        UploadFileModule,
-        KeycloakModule,
-    ],
-    controllers: [AppController, GeolocationController],
-    providers: [AppService, GeolocationService],
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
+    {
+      ...HttpModule.register({}),
+      global: true,
+    },
+    HelperModule,
+    EnumModule,
+    BeneficiariesModule,
+    AuthModule,
+    UserModule,
+    InterviewModule,
+    KeycloakModule,
+    FacilitatorModule,
+    EventsModule,
+    HasuraModule,
+    S3Module,
+    UploadFileModule,
+    AttendancesModule,
+    KeycloakModule,
+    SubjectsModule,
+  ],
+  controllers: [AppController, GeolocationController],
+  providers: [AppService, GeolocationService],
 })
-export class AppModule { }
+export class AppModule {}

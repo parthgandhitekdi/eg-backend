@@ -24,11 +24,19 @@ export class BeneficiariesService {
 
     public returnFields=[
         "status",
-        "facilitator_id",
+        "user_id",
+        "enrollment_number",
         "beneficiaries_found_at",
         "documents_status",
+        "enrollment_status",
+        "enrolled_for_board",
+        "type_of_enrollement",
+        "academic_year_id",
+        "payment_receipt_document_id",
+        "facilitator_id",
+        "documents_status",
         "program_id",
-        "rsos_id",    
+        "reason_for_status_update",   
         "created_by",
         "updated_by",
         
@@ -361,7 +369,7 @@ return resp.status(404).send({
     }
   }
 
-  async create(req: any, update = false, request) {
+  async create(req: any, request, response, update = false) {
     const user=await this.userService.ipUserInfo(request);
     const { data: beneficiaryUser} = await this.userById(req.id);
     const user_id = req?.id;
@@ -374,6 +382,13 @@ return resp.status(404).send({
           'dob'
         ]
       },
+      'registration_contact': {
+        'core_beneficiaries': [
+          'user_id',
+          'device_ownership',
+          'device_type'
+        ]
+      },
       'contact': {
         'users': [
           'mobile',
@@ -382,10 +397,22 @@ return resp.status(404).send({
         ],
         'core_beneficiaries': [
           'user_id',
+          'mark_as_whatsapp_number',
           'device_ownership',
           'device_type',
           'alternative_device_ownership',
           'alternative_device_type'
+        ]
+      },
+      'registration_address': {
+        'users': [
+          'lat',
+          'long',
+          'state',
+          'district',
+          'block',
+          'village',
+          'grampanchayat',
         ]
       },
       'address': {
@@ -416,10 +443,18 @@ return resp.status(404).send({
           'mother_last_name'
         ]
       },
-      'education': {
+      'registration_education': {
         'core_beneficiaries': [
           'user_id',
           'type_of_learner',
+          'last_standard_of_education',
+          'last_standard_of_education_year',
+          'reason_of_leaving_education'
+        ]
+      },
+      'education': {
+        'core_beneficiaries': [
+          'user_id',
           'last_standard_of_education',
           'last_standard_of_education_year',
           'previous_school_type',
@@ -457,6 +492,26 @@ return resp.status(404).send({
         await this.hasuraService.q(tableName, req, userArr, update);
         break;
       }
+
+      case 'registration_contact': {
+        // Update Core Beneficiaries table data
+        const coreBeneficiaryArr = PAGE_WISE_UPDATE_TABLE_DETAILS.registration_contact.core_beneficiaries;
+        const tableName = 'core_beneficiaries';
+        await this.hasuraService.q(
+          tableName,
+          {
+            ...req,
+            id: beneficiaryUser?.core_beneficiaries[0]?.id
+              ? beneficiaryUser?.core_beneficiaries[0]?.id
+              : null,
+            user_id: user_id,
+          },
+          coreBeneficiaryArr,
+          update
+        );
+
+        break;
+      }
       
       case 'contact': {
         // Update Users table data
@@ -480,6 +535,14 @@ return resp.status(404).send({
           update
         );
 
+        break;
+      }
+
+      case 'registration_address': {
+        // Update Users table data
+        const userArr = PAGE_WISE_UPDATE_TABLE_DETAILS.registration_address.users;
+        let tableName = 'users';
+        await this.hasuraService.q(tableName, req, userArr, update);
         break;
       }
 
@@ -513,6 +576,25 @@ return resp.status(404).send({
       case 'family': {
         // Update Core beneficiaries table data
         const userArr = PAGE_WISE_UPDATE_TABLE_DETAILS.family.core_beneficiaries;
+        let tableName = 'core_beneficiaries';
+        await this.hasuraService.q(
+          tableName,
+          {
+            ...req,
+            id: beneficiaryUser?.core_beneficiaries[0]?.id
+              ? beneficiaryUser?.core_beneficiaries[0]?.id
+              : null,
+            user_id,
+          },
+          userArr,
+          update
+        );
+        break;
+      }
+
+      case 'registration_education': {
+        // Update Core beneficiaries table data
+        const userArr = PAGE_WISE_UPDATE_TABLE_DETAILS.registration_education.core_beneficiaries;
         let tableName = 'core_beneficiaries';
         await this.hasuraService.q(
           tableName,
@@ -569,9 +651,8 @@ return resp.status(404).send({
       case 'enrollement':{
         // Update enrollement data in Beneficiaries table 
                 const userArr = PAGE_WISE_UPDATE_TABLE_DETAILS.enrollement.beneficiaries;
-        
-              const programDetails=beneficiaryUser.beneficiaries.find((data) => req.user_id==data.user_id&&req.academic_year_id==data.academic_year_id)
-             let tableName = 'beneficiaries';
+              const programDetails=beneficiaryUser.beneficiaries.find((data) => req.id==data.user_id&&req.academic_year_id==data.academic_year_id)
+              let tableName = 'beneficiaries';
              
                  await this.hasuraService.q(
                   tableName,
@@ -591,7 +672,12 @@ return resp.status(404).send({
               }  
         
     }
-    return this.userById(user_id);
+    const { data: updatedUser} = await this.userById(user_id);
+    return response.status(200).json({
+      success: true,
+      message: "User data fetched successfully!",
+      data: updatedUser
+    });
   }
 
   async newCreate(req: any) {
@@ -655,7 +741,7 @@ return resp.status(404).send({
             facilitator_id
             id
             academic_year_id
-            id
+            user_id
             enrollment_number
             enrollment_status
             enrolled_for_board
@@ -695,6 +781,7 @@ return resp.status(404).send({
             career_aspiration_details
             alternative_device_ownership
             alternative_device_type
+            mark_as_whatsapp_number
           }
           extended_users {
             marital_status
@@ -712,10 +799,9 @@ return resp.status(404).send({
     const response = await this.hasuraServiceFromServices.getData(data);
     let result = response?.data?.users_by_pk;
     let mappedResponse = result;
-    return response.status(200).json({
-      success: true,
-      message: "User data fetched successfully!",
-      data: mappedResponse
-      });
+    return {
+      message: 'User data fetched successfully.',
+      data: mappedResponse,
+    };
   }
 }

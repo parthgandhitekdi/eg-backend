@@ -128,5 +128,28 @@
     { "title": "CAREER_ASPIRATION_FURTHER_STUDIES", "value": "further_studies" },
     { "title": "CAREER_ASPIRATION_SKILL_TRAINING", "value": "skill_training" },
     { "title": "CAREER_ASPIRATION_SMALL_BUSINESS", "value": "small_business" }
+  ],
+  "DOCUMENT_STATUS":[
+{"title":"NOT_AVAILABLE","value":"not_available"},
+{"title":"UPDATE_REQUIRED","value":"update_required"},
+{"title":"APPLIED_NEW_FOR_CHANGE","value":"applied_new_for_change"},
+{"title":"COMPLETE","value":"complete"}
+
+  ],
+  "DOCUMENT_LIST":[
+    {"title":"JAN_ADHAR_CARD","value":"jan_adhar_card"},
+    {"title":"ADHAR_CARD","value":"adhar_card"},
+    {"title":"BANK_PASSBOOK","value":"bank_passbook"},
+    {"title":"PHOTO","value":"photo"},
+    {"title":"CAST_CERTIFICATE","value":"cast_certificate"},
+    {"title":"MOBILE_NUMBER","value":"mobile_number"},
+    {"title":"EMAIL_ID","value":"email_id"},
+    {"title":"TRANSFER_CERTIFICATE","value":"transfer_certificate"},
+    {"title":"MARKSHEET","value":"marksheet"},
+    {"title":"TRANSFER_CERTIFICATE_WITH_CBO_SIGN","value":"transfer_certificate_with_cbo_sign"},
+    {"title":"MARKSHEET_WITH_CBO_SIGN","value":"marksheet_with_cbo_sign"},
+    {"title":"AFFIDAVIT_FOR_NON_SCHOOLING_CERTIFICATION_NOTARY","value":"affidavit_for_non_schooling_certification_notary"},
+    {"title":"BIRTH_CERTIFICATE","value":"birth_certificate"}
+
   ]
 }

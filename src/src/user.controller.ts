@@ -9,17 +9,16 @@ import {
   Put,
   Query,
   Req,
-  Request,
   Res,
   UsePipes,
-  ValidationPipe,
+  ValidationPipe
 } from '@nestjs/common';
+import { Response } from 'express';
 import { lastValueFrom, map } from 'rxjs';
+import { HasuraService } from './hasura/hasura.service';
 import { CreateUserDto } from './helper/dto/create-user.dto';
 import { RegisterFacilitatorDto } from './helper/dto/register-facilitator.dto';
-import { HasuraService } from './hasura/hasura.service';
 import { UserService } from './user.service';
-import { Response } from 'express';
 
 @Controller('/users')
 export class UserController {
@@ -94,8 +93,8 @@ export class UserController {
 
   // users/list by ID API filter pagination
   @Get('/info/:id')
-  public async searchById(@Param('id') id: number) {
-    return this.userService.userById(id);
+  public async searchById(@Param('id') id: number, @Res() response: Response) {
+    return this.userService.userById(id,response);
   }
 
   // users/is_user_exist by mobile and adhaar etc filter.

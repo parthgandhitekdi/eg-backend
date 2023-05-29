@@ -90,9 +90,8 @@ export class HasuraService {
       obj = { errors };
     }
     return {
-      statusCode: 200,
-      message: 'Ok.',
-      ...obj,
+      success: 'true',
+      data: { ...obj },
     };
   }
 

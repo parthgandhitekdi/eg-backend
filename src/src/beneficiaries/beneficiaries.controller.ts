@@ -64,9 +64,10 @@ export class BeneficiariesController {
   public async updateBeneficiary(
     @Param('id') id: string,
     @Body() req: Record<string, any>,
-    @Req() request:any
+    @Req() request:any,
+    @Res() response: any
   ) {
-      return this.beneficiariesService.create({ ...req, id: id }, true, request);
+      return this.beneficiariesService.create({ ...req, id: id }, request, response, true);
   }
   
   @Put('statusUpdate')

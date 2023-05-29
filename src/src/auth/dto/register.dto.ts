@@ -13,8 +13,6 @@ export class RegisterDTO {
   @Matches(/^[6-9]\d{9}$/)
   mobile: number;
 
-  @IsNotEmpty()
-  @Matches(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)
   email_id: string
 
   @IsNotEmpty()

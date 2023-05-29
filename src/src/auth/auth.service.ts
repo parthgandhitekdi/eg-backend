@@ -374,11 +374,12 @@ export class AuthService {
             username += `_${body.last_name.charAt(0)}`;
         }
         username += `_${body.mobile}`;
-        const data_to_create_user = {
+        username = username.toLowerCase()
+        var data_to_create_user = {
             enabled: 'true',
             firstName: body?.first_name,
             lastName: body?.last_name,
-            username: username.toLowerCase(),
+            username: username,
             credentials: [
                 {
                     type: 'password',
@@ -399,10 +400,23 @@ export class AuthService {
         };
         const token = await this.keycloakService.getAdminKeycloakToken(query, 'master')
         if (token?.access_token) {
+            const findUsername = await this.keycloakService.findUser(username, token?.access_token)
+            console.log("findUsername", findUsername)
+
+            if (findUsername.length>0 && body.role === 'beneficiaries') {
+                let lastUsername = findUsername[findUsername.length-1.].username
+                console.log("lastUsername" , lastUsername)
+                let count = findUsername.length
+                console.log('count', count)
+                data_to_create_user.username = data_to_create_user.username + '_' + count;
+                
+            }
+            console.log("data_to_create_user 407", data_to_create_user)
+            
             const registerUserRes = await this.keycloakService.registerUser(data_to_create_user, token.access_token)
             console.log("registerUserRes", registerUserRes)
             if (registerUserRes.error) {
-                if(registerUserRes.error.message == 'Request failed with status code 409') {
+                if (registerUserRes.error.message == 'Request failed with status code 409') {
                     return response.status(200).json({
                         success: false,
                         message: "User already exists!",
@@ -415,16 +429,18 @@ export class AuthService {
                         data: {}
                     });
                 }
-                
+
             } else if (registerUserRes.headers.location) {
-                
+
                 const split = registerUserRes.headers.location.split('/');
                 const keycloak_id = split[split.length - 1];
                 body.keycloak_id = keycloak_id;
-                if(body.role_fields.parent_ip) {
+                body.username = data_to_create_user.username;
+                body.password = password
+                if (body.role_fields.parent_ip) {
                     body.parent_ip = body.role_fields.parent_ip
                 }
-                if(body.role_fields.faciliator_id) {
+                if (body.role_fields.faciliator_id) {
                     body.faciliator_id = body.role_fields.faciliator_id
                 }
                 console.log("body 415", body)
@@ -437,7 +453,7 @@ export class AuthService {
                     data: {
                         user: result?.data,
                         keycloak_id: keycloak_id,
-                        username: username,
+                        username: data_to_create_user.username,
                         password: password,
                     },
                 });
@@ -557,8 +573,8 @@ export class AuthService {
             method: 'get',
             maxBodyLength: Infinity,
             url: `${process.env.SMS_GATEWAY_BASE_URL}/VoicenSMS/webresources/CreateSMSCampaignGet?ukey=${process.env.SMS_GATEWAY_API_KEY}&msisdnlist=phoneno:${mobileNo},arg1:${otp}&language=2&credittype=8&senderid=FEGGPR&templateid=32490&message=%E0%A4%A8%E0%A4%AE%E0%A4%B8%E0%A5%8D%E0%A4%A4%E0%A5%87,%20%E0%A4%AA%E0%A5%8D%E0%A4%B0%E0%A4%97%E0%A4%A4%E0%A4%BF%20%E0%A4%AA%E0%A5%8D%E0%A4%B2%E0%A5%87%E0%A4%9F%E0%A4%AB%E0%A5%89%E0%A4%B0%E0%A5%8D%E0%A4%AE%20%E0%A4%AA%E0%A4%B0%20%E0%A4%B8%E0%A4%A4%E0%A5%8D%E0%A4%AF%E0%A4%BE%E0%A4%AA%E0%A4%A8/%E0%A4%B2%E0%A5%89%E0%A4%97%E0%A4%BF%E0%A4%A8%20%E0%A4%95%E0%A5%87%20%E0%A4%B2%E0%A4%BF%E0%A4%8F%20%E0%A4%86%E0%A4%AA%E0%A4%95%E0%A4%BE%20%E0%A4%93%E0%A4%9F%E0%A5%80%E0%A4%AA%E0%A5%80%20%3Carg1%3E%20%E0%A4%B9%E0%A5%88%E0%A5%A4%20FEGG&isschd=false&isrefno=true&filetype=1`,
-            headers: { }
-          };
+            headers: {}
+        };
 
         try {
             const res = await axios.request(config)
@@ -579,11 +595,25 @@ export class AuthService {
             'mobile',
             'email_id',
             'keycloak_id',
+            'username',
+            'password'
         ]);
         const user_id = newR[tableName]?.id;
+        let groupName = ''
+        let groupId = ''
+        if (req.role === 'beneficiaries') {
+            groupName = 'beneficiaries'
+            groupId = 'facilitator_id'
+        }
+        if (req.role === 'facilitators') {
+            groupName = 'program_faciltators'
+            groupId = 'parent_ip'
+        }
+        console.log("groupName", groupName)
+        console.log("groupId", groupId)
         if (user_id) {
-            await this.hasuraService.q(`program_faciltators`, { ...req, user_id }, [
-                'parent_ip',
+            await this.hasuraService.q(`${groupName}`, { ...req, user_id }, [
+                `${groupId}`,
                 'user_id',
             ]);
         }
@@ -761,5 +791,26 @@ export class AuthService {
             data: mappedResponse,
         };
     }
+
+    public incrementString(str) {
+        // Extract the numeric part of the string
+        const matches = str.match(/\d+$/);
+        if (matches === null) {
+            // If there is no numeric part, simply append '1' to the string
+            return str + '1';
+        }
+
+        const numericPart = matches[0];
+        const numericLength = numericPart.length;
+        const incrementedNumber = (parseInt(numericPart, 10) + 1).toString();
+
+        // Pad the incremented number with leading zeros if necessary
+        const paddedNumber = incrementedNumber.padStart(numericLength, '0');
+
+        // Replace the numeric part in the original string with the incremented number
+        return str.replace(/\d+$/, paddedNumber);
+    }
+
+    
 
 }
