@@ -1,17 +1,20 @@
 import {
-    Body, Controller, Post, Req, Res, UseGuards, UsePipes,
+    Body, Controller,
+    Get,
+    Param, Post, Req,
+    Res, UseGuards, UsePipes,
     ValidationPipe
 } from '@nestjs/common';
 import { Request, Response } from 'express';
+import { AuthGuard } from './auth.guard';
 import { AuthService } from './auth.service';
+import { GetMobileByUsernameSendOtpDTO } from './dto/get-mobile-by-username-send-otp.dto';
 import { OtpSendDTO } from './dto/otp-send.dto';
 import { OtpVerifyDTO } from './dto/otp-verify.dto';
-import { GetMobileByUsernameSendOtpDTO } from './dto/get-mobile-by-username-send-otp.dto';
-import { UserOtpSendDTO } from './dto/username-otp.dto';
-import { AuthGuard } from './auth.guard';
-import { ResetPasswordAdminDTO } from './dto/reset-password-admin.dto';
 import { RegisterDTO } from './dto/register.dto';
+import { ResetPasswordAdminDTO } from './dto/reset-password-admin.dto';
 import { UserExistDTO } from './dto/user-exist.dto';
+import { UserOtpSendDTO } from './dto/username-otp.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -43,7 +46,7 @@ export class AuthController {
     }
 
     @Post('/reset-password-admin')
-    @UseGuards(new AuthGuard())
+    // @UseGuards(new AuthGuard())
     @UsePipes(ValidationPipe)
     public resetPasswordUsingId(@Body() req: ResetPasswordAdminDTO, @Req() header: Request, @Res() response: Response) {
         return this.authService.resetPasswordUsingId(req, header, response);
@@ -66,5 +69,65 @@ export class AuthController {
     @UsePipes(ValidationPipe)
     public async register(@Body() body: RegisterDTO, @Res() response: Response) {
         return this.authService.register(body, response);
+    }
+
+
+    @Post('/okyc/')
+    @UseGuards(new AuthGuard())
+    @UsePipes(ValidationPipe)
+    private async createOkycRequest(
+        @Body() body,
+        @Req() request: any,
+        @Res() response: Response
+
+    ) {
+        return this.authService.createOkycRequest(body, request, response);
+    }
+
+    @Get('/okyc/:requestId/initiate/')
+    @UseGuards(new AuthGuard())
+    @UsePipes(ValidationPipe)
+    private async initiateOkycRequest(
+        @Param('requestId') id: string,
+        @Req() request: any,
+        @Res() response: Response
+    ) {
+        return this.authService.initiateOkycRequest(id, request, response);
+    }
+
+    @Post('/okyc/:requestId/verify/')
+    @UseGuards(new AuthGuard())
+    @UsePipes(ValidationPipe)
+    private async verifyOkycRequest(
+        @Param('requestId') id: string,
+        @Body() body,
+        @Req() request: any,
+        @Res() response: Response
+    ) {
+        return this.authService.verifyOkycRequest(id, body, request, response);
+    }
+
+    @Post('/okyc/:requestId/complete/')
+    @UseGuards(new AuthGuard())
+    @UsePipes(ValidationPipe)
+    private async completeOkycRequest(
+        @Param('requestId') id: string,
+        @Body() body,
+        @Req() request: any,
+        @Res() response: Response
+    ) {
+        return this.authService.completeOkycRequest(id, body, request, response);
+    }
+
+    @Get('/okyc/:requestId/:shareCode/')
+    @UseGuards(new AuthGuard())
+    @UsePipes(ValidationPipe)
+    private async getOkycStatusRequest(
+        @Param('requestId') id: string,
+        @Param('shareCode') shareCode: number,
+        @Req() request: any,
+        @Res() response: Response
+    ) {
+        return this.authService.getOkycStatusRequest(id, shareCode, request, response);
     }
 }

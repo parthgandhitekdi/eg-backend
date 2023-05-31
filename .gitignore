@@ -1,7 +1,7 @@
 # 3pd
-bower_components/*
-jspm_packages/*
-node_modules/*
+*/bower_components/*
+*/jspm_packages/*
+*/node_modules/*
 
 # Cache files
 .cache
@@ -13,9 +13,9 @@ node_modules/*
 .yarn/install-state.gz
 
 # Dist / builds
-build/*
-builds/*
-dist/*
+*/build/*
+*/builds/*
+*/dist/*
 
 # G cloud config
 educate-girls-*.json

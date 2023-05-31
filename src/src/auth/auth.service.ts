@@ -1,27 +1,34 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import jwt_decode from 'jwt-decode';
+import { AadhaarKycService } from 'src/aadhaar_kyc/aadhaar_kyc.service';
 import { HasuraService } from 'src/services/hasura/hasura.service';
 import { KeycloakService } from 'src/services/keycloak/keycloak.service';
-import jwt_decode from 'jwt-decode';
-const crypto = require("crypto");
+const crypto = require('crypto');
 const axios = require('axios');
 const atob = require('atob');
 
 @Injectable()
 export class AuthService {
-
     public smsKey = this.configService.get<string>('SMS_KEY');
-    public keycloak_admin_cli_client_secret = this.configService.get<string>('KEYCLOAK_ADMIN_CLI_CLIENT_SECRET');
+    public keycloak_admin_cli_client_secret = this.configService.get<string>(
+        'KEYCLOAK_ADMIN_CLI_CLIENT_SECRET',
+    );
 
-    constructor(private configService: ConfigService, private readonly keycloakService: KeycloakService, private readonly hasuraService: HasuraService) { }
+    constructor(
+        private configService: ConfigService,
+        private aadhaarKycService: AadhaarKycService,
+        private readonly keycloakService: KeycloakService,
+        private readonly hasuraService: HasuraService,
+    ) { }
 
     public async sendOtp(req, response) {
         const mobile = req.mobile;
         const reason = req.reason;
 
         if (mobile && reason) {
-            const sendOtpRes = await this.sendOtpSMS(mobile, reason)
-            console.log("sendOtpRes", sendOtpRes)
+            const sendOtpRes = await this.sendOtpSMS(mobile, reason);
+            console.log('sendOtpRes', sendOtpRes);
 
             if (sendOtpRes.success) {
                 return response.status(200).json(sendOtpRes);
@@ -43,7 +50,7 @@ export class AuthService {
             return response.status(400).json({
                 success: false,
                 message: 'Timeout please try again',
-                data: {}
+                data: {},
             });
         }
 
@@ -51,7 +58,7 @@ export class AuthService {
             return response.status(200).json({
                 success: true,
                 message: 'OTP verified successfully!',
-                data: {}
+                data: {},
             });
         }
 
@@ -59,14 +66,13 @@ export class AuthService {
             return response.status(400).json({
                 success: false,
                 message: 'Incorrect OTP',
-                data: {}
+                data: {},
             });
         }
-
     }
 
     public async resetPasswordUsingOtp(req, response) {
-        console.log("req", req)
+        console.log('req', req);
         const username = req.username;
         const hash = req.hash;
         const otp = req.otp;
@@ -82,26 +88,25 @@ export class AuthService {
                   first_name
                   mobile
                 }
-              }`
-        }
-        const userRes = await this.hasuraService.postData(query)
-        console.log("userRes", userRes)
+              }`,
+        };
+        const userRes = await this.hasuraService.postData(query);
+        console.log('userRes', userRes);
 
         if (userRes.data.users.length > 0) {
+            const mobile = userRes.data.users[0].mobile;
+            const keycloak_id = userRes.data.users[0].keycloak_id;
 
-            const mobile = userRes.data.users[0].mobile
-            const keycloak_id = userRes.data.users[0].keycloak_id
-
-            console.log("mobile", mobile)
-            console.log("keycloak_id", keycloak_id)
+            console.log('mobile', mobile);
+            console.log('keycloak_id', keycloak_id);
             if (mobile && keycloak_id) {
-                const otpVerify = await this.otpVerification(mobile, hash, otp, reason)
+                const otpVerify = await this.otpVerification(mobile, hash, otp, reason);
 
                 if (otpVerify === 'Timeout please try again') {
                     return response.status(400).json({
                         success: false,
                         message: 'Timeout please try again',
-                        data: {}
+                        data: {},
                     });
                 }
 
@@ -110,59 +115,62 @@ export class AuthService {
                         username: 'admin',
                         client_id: 'admin-cli',
                         grant_type: 'client_credentials',
-                        client_secret: this.keycloak_admin_cli_client_secret
+                        client_secret: this.keycloak_admin_cli_client_secret,
                     };
-                    const token = await this.keycloakService.getAdminKeycloakToken(query, 'master')
+                    const token = await this.keycloakService.getAdminKeycloakToken(
+                        query,
+                        'master',
+                    );
                     if (token?.access_token && keycloak_id) {
-
-                        const resetPasswordRes = await this.keycloakService.resetPassword(keycloak_id, token.access_token, req.password)
+                        const resetPasswordRes = await this.keycloakService.resetPassword(
+                            keycloak_id,
+                            token.access_token,
+                            req.password,
+                        );
 
                         if (resetPasswordRes) {
                             return response.status(200).json({
                                 success: true,
                                 message: 'Password updated successfully!',
-                                data: {}
+                                data: {},
                             });
                         } else {
                             return response.status(200).json({
                                 success: false,
                                 message: 'unable to reset password!',
-                                data: {}
+                                data: {},
                             });
                         }
-
                     } else {
                         return response.status(200).json({
                             success: false,
                             message: 'unable to get token',
-                            data: {}
+                            data: {},
                         });
                     }
-
                 }
 
                 if (otpVerify === 'Incorrect OTP') {
                     return response.status(400).json({
                         success: false,
                         message: 'Incorrect OTP',
-                        data: {}
+                        data: {},
                     });
                 }
             } else {
                 return response.status(400).json({
                     success: false,
                     message: 'Mobile no. not found!',
-                    data: {}
+                    data: {},
                 });
             }
         } else {
             return response.status(400).json({
                 success: false,
                 message: 'Username not found!',
-                data: {}
+                data: {},
             });
         }
-
     }
 
     public async getMobileByUsernameSendOtp(req, response) {
@@ -179,17 +187,17 @@ export class AuthService {
                   first_name
                   mobile
                 }
-              }`
-        }
-        const userRes = await this.hasuraService.postData(query)
-        console.log("userRes", userRes)
+              }`,
+        };
+        const userRes = await this.hasuraService.postData(query);
+        console.log('userRes', userRes);
 
         if (userRes.data.users.length > 0) {
-            const mobile = userRes.data.users[0].mobile
+            const mobile = userRes.data.users[0].mobile;
 
             if (mobile) {
-                const sendOtpRes = await this.sendOtpSMS(mobile, reason)
-                console.log("sendOtpRes", sendOtpRes)
+                const sendOtpRes = await this.sendOtpSMS(mobile, reason);
+                console.log('sendOtpRes', sendOtpRes);
 
                 if (sendOtpRes.success) {
                     return response.status(200).json(sendOtpRes);
@@ -200,28 +208,24 @@ export class AuthService {
                 return response.status(400).json({
                     success: false,
                     message: 'Mobile no. not found!',
-                    data: {}
+                    data: {},
                 });
             }
         } else {
             return response.status(400).json({
                 success: false,
                 message: 'Username not found!',
-                data: {}
+                data: {},
             });
         }
-
-
-
-
     }
 
     public async resetPasswordUsingId(req, header, response) {
-        console.log("req", req)
-        const authToken = header.header("authorization");
+        console.log('req', req);
+        const authToken = header.header('authorization');
         const decoded: any = jwt_decode(authToken);
         let keycloak_id = decoded.sub;
-        console.log("keycloak_id", keycloak_id)
+        console.log('keycloak_id', keycloak_id);
         let query2 = {
             query: `query MyQuery {
                 users(where: {keycloak_id: {_eq: "${keycloak_id}" }}) {
@@ -235,10 +239,13 @@ export class AuthService {
                     }
                   }
                 }
-              }`
-        }
-        const userRole = await this.hasuraService.postData(query2)
-        console.log("userRole", userRole.data.users[0].program_users[0].roles.role_type)
+              }`,
+        };
+        const userRole = await this.hasuraService.postData(query2);
+        console.log(
+            'userRole',
+            userRole.data.users[0].program_users[0].roles.role_type,
+        );
         if (userRole.data.users[0].program_users[0].roles.role_type === 'IP') {
             let query = {
                 query: `query MyQuery {
@@ -248,79 +255,86 @@ export class AuthService {
                       id
                       first_name
                     }
-                  }`
-            }
-            const userRes = await this.hasuraService.postData(query)
-            console.log("userRes", userRes)
+                  }`,
+            };
+            const userRes = await this.hasuraService.postData(query);
+            console.log('userRes', userRes);
             if (userRes) {
                 const query = {
                     username: 'admin',
                     client_id: 'admin-cli',
                     grant_type: 'client_credentials',
-                    client_secret: this.keycloak_admin_cli_client_secret
+                    client_secret: this.keycloak_admin_cli_client_secret,
                 };
-                const token = await this.keycloakService.getAdminKeycloakToken(query, 'master')
+                const token = await this.keycloakService.getAdminKeycloakToken(
+                    query,
+                    'master',
+                );
                 if (token?.access_token && userRes.data.users_by_pk.keycloak_id) {
-
-                    const resetPasswordRes = await this.keycloakService.resetPassword(userRes.data.users_by_pk.keycloak_id, token.access_token, req.password)
+                    const resetPasswordRes = await this.keycloakService.resetPassword(
+                        userRes.data.users_by_pk.keycloak_id,
+                        token.access_token,
+                        req.password,
+                    );
 
                     if (resetPasswordRes) {
                         return response.status(200).json({
                             success: true,
                             message: 'Password updated successfully!',
-                            data: {}
+                            data: {},
                         });
                     } else {
                         return response.status(200).json({
                             success: false,
                             message: 'unable to reset password!',
-                            data: {}
+                            data: {},
                         });
                     }
-
                 } else {
                     return response.status(200).json({
                         success: false,
                         message: 'unable to get token',
-                        data: {}
+                        data: {},
                     });
                 }
             } else {
                 return response.status(200).json({
                     success: false,
                     message: 'User not found!',
-                    data: {}
+                    data: {},
                 });
             }
         } else {
             return response.status(200).json({
                 success: false,
                 message: "User cann't reset password",
-                data: {}
+                data: {},
             });
         }
-
     }
 
     public async login(req, response) {
-
-        const headers = req.header("authorization").split(" ");
-        console.log("headers", headers)
+        console.log(req);
+        /*const headers = req.header('authorization').split(' ');
+        console.log('headers', headers);
         const b64ToString = atob(headers[1]);
         const creds = b64ToString.split(':');
-        console.log("creds", creds)
+        console.log('creds', creds);*/
 
         const query = {
-            username: creds[0],
-            password: creds[1],
+            username: req.body.username,
+            password: req.body.password,
             grant_type: 'password',
             client_id: 'hasura',
         };
 
-        console.log("query", query)
-        const token = await this.keycloakService.getAdminKeycloakToken(query, 'eg-sso')
+        console.log('query', query);
+        const token = await this.keycloakService.getAdminKeycloakToken(
+            query,
+            'eg-sso',
+        );
 
-        console.log("token", token)
+        console.log('token', token);
 
         if (token) {
             return response.status(200).send({
@@ -335,8 +349,6 @@ export class AuthService {
                 data: null,
             });
         }
-
-
     }
 
     public async isUserExist(req, response) {
@@ -362,10 +374,26 @@ export class AuthService {
             });
         }
     }
+    public async createOkycRequest(body, request, response) {
+        return await this.aadhaarKycService.createOkycRequest(body, request, response);
+    }
+
+    public async initiateOkycRequest(id, request, response) {
+        return await this.aadhaarKycService.initiateOkycRequest(id, request, response);
+    }
+    public async verifyOkycRequest(id, body, request, response) {
+        return await this.aadhaarKycService.verifyOkycRequest(id, body, request, response);
+    }
+    public async completeOkycRequest(id, body, request, response) {
+        return await this.aadhaarKycService.completeOkycRequest(id, body, request, response);
+    }
+
+    public async getOkycStatusRequest(id, shareCode, request, response) {
+        return await this.aadhaarKycService.getOkycStatusRequest(id, shareCode, request, response);
+    }
 
     public async register(body, response) {
-
-        console.log("body", body)
+        console.log('body', body);
 
         //const password = `@${this.helper.generateRandomPassword()}`;
         const password = body?.mobile;
@@ -374,7 +402,7 @@ export class AuthService {
             username += `_${body.last_name.charAt(0)}`;
         }
         username += `_${body.mobile}`;
-        username = username.toLowerCase()
+        username = username.toLowerCase();
         var data_to_create_user = {
             enabled: 'true',
             firstName: body?.first_name,
@@ -390,62 +418,71 @@ export class AuthService {
             groups: [`${body.role}`],
         };
 
-        console.log("data_to_create_user", data_to_create_user)
+        console.log('data_to_create_user', data_to_create_user);
 
         const query = {
             username: 'admin',
             client_id: 'admin-cli',
             grant_type: 'client_credentials',
-            client_secret: this.keycloak_admin_cli_client_secret
+            client_secret: this.keycloak_admin_cli_client_secret,
         };
-        const token = await this.keycloakService.getAdminKeycloakToken(query, 'master')
+        const token = await this.keycloakService.getAdminKeycloakToken(
+            query,
+            'master',
+        );
         if (token?.access_token) {
-            const findUsername = await this.keycloakService.findUser(username, token?.access_token)
-            console.log("findUsername", findUsername)
+            const findUsername = await this.keycloakService.findUser(
+                username,
+                token?.access_token,
+            );
+            console.log('findUsername', findUsername);
 
-            if (findUsername.length>0 && body.role === 'beneficiaries') {
-                let lastUsername = findUsername[findUsername.length-1.].username
-                console.log("lastUsername" , lastUsername)
-                let count = findUsername.length
-                console.log('count', count)
-                data_to_create_user.username = data_to_create_user.username + '_' + count;
-                
+            if (findUsername.length > 0 && body.role === 'beneficiaries') {
+                let lastUsername = findUsername[findUsername.length - 1].username;
+                console.log('lastUsername', lastUsername);
+                let count = findUsername.length;
+                console.log('count', count);
+                data_to_create_user.username =
+                    data_to_create_user.username + '_' + count;
             }
-            console.log("data_to_create_user 407", data_to_create_user)
-            
-            const registerUserRes = await this.keycloakService.registerUser(data_to_create_user, token.access_token)
-            console.log("registerUserRes", registerUserRes)
+            console.log('data_to_create_user 407', data_to_create_user);
+
+            const registerUserRes = await this.keycloakService.registerUser(
+                data_to_create_user,
+                token.access_token,
+            );
+            console.log('registerUserRes', registerUserRes);
             if (registerUserRes.error) {
-                if (registerUserRes.error.message == 'Request failed with status code 409') {
+                if (
+                    registerUserRes.error.message == 'Request failed with status code 409'
+                ) {
                     return response.status(200).json({
                         success: false,
-                        message: "User already exists!",
-                        data: {}
+                        message: 'User already exists!',
+                        data: {},
                     });
                 } else {
                     return response.status(200).json({
                         success: false,
                         message: registerUserRes.error.message,
-                        data: {}
+                        data: {},
                     });
                 }
-
             } else if (registerUserRes.headers.location) {
-
                 const split = registerUserRes.headers.location.split('/');
                 const keycloak_id = split[split.length - 1];
                 body.keycloak_id = keycloak_id;
                 body.username = data_to_create_user.username;
-                body.password = password
+                body.password = password;
                 if (body.role_fields.parent_ip) {
-                    body.parent_ip = body.role_fields.parent_ip
+                    body.parent_ip = body.role_fields.parent_ip;
                 }
                 if (body.role_fields.faciliator_id) {
-                    body.faciliator_id = body.role_fields.faciliator_id
+                    body.faciliator_id = body.role_fields.faciliator_id;
                 }
-                console.log("body 415", body)
+                console.log('body 415', body);
                 const result = await this.newCreate(body);
-                console.log("result", result)
+                console.log('result', result);
 
                 return response.status(200).send({
                     success: true,
@@ -461,45 +498,39 @@ export class AuthService {
                 return response.status(200).json({
                     success: false,
                     message: 'Unable to create user in keycloak',
-                    data: {}
+                    data: {},
                 });
             }
         } else {
             return response.status(200).json({
                 success: false,
                 message: 'Unable to get keycloak token',
-                data: {}
+                data: {},
             });
         }
-
     }
     //helper function
     public async sendOtpSMS(mobile, reason) {
-
         const otp = crypto.randomInt(100000, 999999);
         const ttl = parseInt(process.env.OTP_EXPIRY_IN_MINUTES) * 60 * 1000;
         const expires = Date.now() + ttl;
         const data = `${mobile}.${otp}.${reason}.${expires}`;
         const smsKey = this.smsKey;
 
-        const hash = crypto
-            .createHmac("sha256", smsKey)
-            .update(data)
-            .digest("hex");
+        const hash = crypto.createHmac('sha256', smsKey).update(data).digest('hex');
         const fullhash = `${hash}.${expires}`;
 
-        console.log("OTP_EXPIRY_IN_MINUTES", process.env.OTP_EXPIRY_IN_MINUTES);
-        console.log("mobile", mobile);
-        console.log("reason", reason);
-        console.log("fullhash", fullhash);
-        console.log("otp", otp);
+        console.log('OTP_EXPIRY_IN_MINUTES', process.env.OTP_EXPIRY_IN_MINUTES);
+        console.log('mobile', mobile);
+        console.log('reason', reason);
+        console.log('fullhash', fullhash);
+        console.log('otp', otp);
 
         const mobileStr = mobile.toString();
 
         if (otp && fullhash) {
-
-            const otpRes = await this.sendSMS(mobile, otp)
-            console.log("otpRes", otpRes)
+            const otpRes = await this.sendSMS(mobile, otp);
+            console.log('otpRes', otpRes);
             if (otpRes) {
                 return {
                     success: true,
@@ -507,84 +538,72 @@ export class AuthService {
                     data: {
                         // @TODO - remove OTP later
                         otp: otp,
-                        hash: fullhash
-                    }
-                }
-
+                        hash: fullhash,
+                    },
+                };
             } else {
                 return {
                     success: false,
                     message: 'Unable to send OTP!',
-                    data: {}
-                }
-
+                    data: {},
+                };
             }
-
         } else {
             return {
                 success: false,
                 message: 'Unable to send OTP!',
-                data: {}
-            }
-
+                data: {},
+            };
         }
     }
 
     public async otpVerification(mobile, hash, otp, reason) {
-        let [hashValue, expires] = hash.split(".");
+        let [hashValue, expires] = hash.split('.');
         let now = Date.now();
 
         if (now > parseInt(expires)) {
-
             return 'Timeout please try again';
-
         }
 
         const data = `${mobile}.${otp}.${reason}.${expires}`;
         const smsKey = this.smsKey;
 
         const newCalculatedHash = crypto
-            .createHmac("sha256", smsKey)
+            .createHmac('sha256', smsKey)
             .update(data)
-            .digest("hex");
+            .digest('hex');
 
         if (newCalculatedHash === hashValue) {
-
             return 'OTP verified successfully';
-
         } else {
-
             return 'Incorrect OTP';
-
         }
     }
 
     public async sendSMS(mobileNo, otp) {
+        console.log('mobileNo', mobileNo);
+        console.log('otp', otp);
 
-        console.log("mobileNo", mobileNo)
-        console.log("otp", otp)
+        let msg =
+            'नमस्ते, प्रगति प्लेटफॉर्म पर सत्यापन/लॉगिन के लिए आपका ओटीपी <arg1> है।';
 
-        let msg = "नमस्ते, प्रगति प्लेटफॉर्म पर सत्यापन/लॉगिन के लिए आपका ओटीपी <arg1> है।"
-
-        let encodeMsg = encodeURIComponent(msg)
-        console.log("encodeMsg", encodeMsg)
+        let encodeMsg = encodeURIComponent(msg);
+        console.log('encodeMsg', encodeMsg);
 
         let config = {
             method: 'get',
             maxBodyLength: Infinity,
             url: `${process.env.SMS_GATEWAY_BASE_URL}/VoicenSMS/webresources/CreateSMSCampaignGet?ukey=${process.env.SMS_GATEWAY_API_KEY}&msisdnlist=phoneno:${mobileNo},arg1:${otp}&language=2&credittype=8&senderid=FEGGPR&templateid=32490&message=%E0%A4%A8%E0%A4%AE%E0%A4%B8%E0%A5%8D%E0%A4%A4%E0%A5%87,%20%E0%A4%AA%E0%A5%8D%E0%A4%B0%E0%A4%97%E0%A4%A4%E0%A4%BF%20%E0%A4%AA%E0%A5%8D%E0%A4%B2%E0%A5%87%E0%A4%9F%E0%A4%AB%E0%A5%89%E0%A4%B0%E0%A5%8D%E0%A4%AE%20%E0%A4%AA%E0%A4%B0%20%E0%A4%B8%E0%A4%A4%E0%A5%8D%E0%A4%AF%E0%A4%BE%E0%A4%AA%E0%A4%A8/%E0%A4%B2%E0%A5%89%E0%A4%97%E0%A4%BF%E0%A4%A8%20%E0%A4%95%E0%A5%87%20%E0%A4%B2%E0%A4%BF%E0%A4%8F%20%E0%A4%86%E0%A4%AA%E0%A4%95%E0%A4%BE%20%E0%A4%93%E0%A4%9F%E0%A5%80%E0%A4%AA%E0%A5%80%20%3Carg1%3E%20%E0%A4%B9%E0%A5%88%E0%A5%A4%20FEGG&isschd=false&isrefno=true&filetype=1`,
-            headers: {}
+            headers: {},
         };
 
         try {
-            const res = await axios.request(config)
-            console.log("otp api res", res.data)
-            return res.data
+            const res = await axios.request(config);
+            console.log('otp api res', res.data);
+            return res.data;
         } catch (err) {
-            console.log("otp err", err)
+            console.log('otp err', err);
         }
-
-
     }
 
     async newCreate(req: any) {
@@ -596,21 +615,21 @@ export class AuthService {
             'email_id',
             'keycloak_id',
             'username',
-            'password'
+            'password',
         ]);
         const user_id = newR[tableName]?.id;
-        let groupName = ''
-        let groupId = ''
+        let groupName = '';
+        let groupId = '';
         if (req.role === 'beneficiaries') {
-            groupName = 'beneficiaries'
-            groupId = 'facilitator_id'
+            groupName = 'beneficiaries';
+            groupId = 'facilitator_id';
         }
         if (req.role === 'facilitators') {
-            groupName = 'program_faciltators'
-            groupId = 'parent_ip'
+            groupName = 'program_faciltators';
+            groupId = 'parent_ip';
         }
-        console.log("groupName", groupName)
-        console.log("groupId", groupId)
+        console.log('groupName', groupName);
+        console.log('groupId', groupId);
         if (user_id) {
             await this.hasuraService.q(`${groupName}`, { ...req, user_id }, [
                 `${groupId}`,
@@ -622,7 +641,7 @@ export class AuthService {
 
     async userById(id: any) {
         var data = {
-            query: `query searchById {        
+            query: `query searchById {
             users_by_pk(id: ${id}) {
               first_name
               id
@@ -784,7 +803,6 @@ export class AuthService {
             };
         }
 
-
         return {
             statusCode: 200,
             message: 'Ok.',
@@ -810,7 +828,4 @@ export class AuthService {
         // Replace the numeric part in the original string with the incremented number
         return str.replace(/\d+$/, paddedNumber);
     }
-
-    
-
 }
