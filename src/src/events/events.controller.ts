@@ -12,10 +12,10 @@ import {
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
+import { Request, Response } from 'express';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { CreateEventDto } from './dto/create-event.dto';
 import { EventsService } from './events.service';
-import { Request,Response } from 'express';
 
 @Controller('events')
 export class EventsController {
@@ -40,8 +40,8 @@ export class EventsController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.eventsService.findOne(+id);
+  findOne(@Param('id') id: string, @Res() response: Response) {
+    return this.eventsService.findOne(+id,response);
   }
 
   @Patch(':id')

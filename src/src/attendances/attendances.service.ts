@@ -5,7 +5,7 @@ import { HasuraService } from 'src/hasura/hasura.service';
 
 @Injectable()
 export class AttendancesService {
-  public table = 'attendances';
+  public table = 'attendance';
   public fillable = [
     'user_id',
     'context_id',

@@ -95,17 +95,31 @@
     { "title": "RSOS", "value": "rsos" },
     { "title": "NIOS", "value": "nios" }
   ],
-  "SOCIAL_STATUS": [
-    { "title": "SC", "value": "sc" },
-    { "title": "ST", "value": "st" },
-    { "title": "OBC", "value": "obc" },
-    { "title": "GENERAL", "value": "general" },
-    { "title": "OTHERS", "value": "others" }
+  "BENEFICIARY_SOCIAL_STATUS": [
+    { "title": "BENEFICIARY_SOCIAL_STATUS_SC", "value": "sc" },
+    { "title": "BENEFICIARY_SOCIAL_STATUS_ST", "value": "st" },
+    { "title": "BENEFICIARY_SOCIAL_STATUS_OBC", "value": "obc" },
+    { "title": "BENEFICIARY_SOCIAL_STATUS_GENERAL", "value": "general" },
+    { "title": "BENEFICIARY_SOCIAL_STATUS_OTHERS", "value": "others" }
+  ],
+  "FACILITATOR_SOCIAL_STATUS": [
+    { "title": "FACILITATOR_SOCIAL_STATUS_SC", "value": "sc" },
+    { "title": "FACILITATOR_SOCIAL_STATUS_ST", "value": "st" },
+    { "title": "FACILITATOR_SOCIAL_STATUS_OBC", "value": "obc" },
+    { "title": "FACILITATOR_SOCIAL_STATUS_OPEN", "value": "open" },
+    { "title": "FACILITATOR_SOCIAL_STATUS_OTHER", "value": "other" }
   ],
   "BENEFICIARY_MARITAL_STATUS": [
-    { "title": "SINGLE", "value": "single" },
-    { "title": "MARRIED", "value": "married" },
-    { "title": "UNMARRIED", "value": "unmarried" }
+    { "title": "BENEFICIARY_MARITAL_STATUS_SINGLE", "value": "single" },
+    { "title": "BENEFICIARY_MARITAL_STATUS_MARRIED", "value": "married" },
+    { "title": "BENEFICIARY_MARITAL_STATUS_UNMARRIED", "value": "unmarried" }
+  ],
+  "FACILITATOR_MARITAL_STATUS": [
+    { "title": "FACILITATOR_MARITAL_STATUS_SINGLE", "value": "single" },
+    { "title": "FACILITATOR_MARITAL_STATUS_MARRIED", "value": "married" },
+    { "title": "FACILITATOR_MARITAL_STATUS_DIVORCED", "value": "divorced" },
+    { "title": "FACILITATOR_MARITAL_STATUS_SEPARATED", "value": "separated" },
+    { "title": "FACILITATOR_MARITAL_STATUS_OTHER", "value": "other" }
   ],
   "REASON_OF_LEAVING_EDUCATION": [
     { "title": "SCHOOL_BEING_TOO_FAR_AWAY", "value": "school_being_too_far_away" },

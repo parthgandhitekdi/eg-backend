@@ -6,6 +6,10 @@ export class CreateEventDto {
     @IsString()
     @IsNotEmpty()
     public start_date: string;
+
+    @IsString()
+    @IsNotEmpty()
+    public name: string;
     
     @IsString()
     @IsNotEmpty()
@@ -37,6 +41,6 @@ export class CreateEventDto {
 
     @IsArray()
     @IsNotEmpty()
-    public user_id: [];
+    public reminders: [];
     
 }
