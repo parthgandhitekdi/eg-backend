@@ -555,6 +555,17 @@ export class BeneficiariesService {
           'document_status',
         ],
       },
+      edit_reference: {
+        references: [
+          'first_name',
+          'middle_name',
+          'last_name',
+          'relation',
+          'contact_number',
+          'context',
+          'context_id'
+        ],
+      }
     };
 
     switch (req.edit_page_type) {
@@ -783,6 +794,24 @@ export class BeneficiariesService {
           update,
         );
       }
+      case 'edit_reference': {
+        // Update References table data
+        const referencesArr =
+        PAGE_WISE_UPDATE_TABLE_DETAILS.edit_reference.references;
+        const tableName = 'references';
+        await this.hasuraService.q(
+          tableName,
+          {
+            ...req,
+            id: beneficiaryUser?.references?.[0]?.id ?? null,
+            ...(!beneficiaryUser?.references?.[0]?.id && { context: 'users' }),
+            ...(!beneficiaryUser?.references?.[0]?.id && { context_id: user_id })
+          },
+          referencesArr,
+          update,
+        );
+        break;
+      }
     }
     const { data: updatedUser } = await this.userById(user_id);
     return response.status(200).json({
@@ -894,6 +923,20 @@ export class BeneficiariesService {
             alternative_device_ownership
             alternative_device_type
             mark_as_whatsapp_number
+          }
+          references {
+            id
+            name
+            first_name
+            last_name
+            middle_name
+            relation
+            contact_number
+            designation
+            document_id
+            type_of_document
+            context
+            context_id
           }
           extended_users {
             marital_status
