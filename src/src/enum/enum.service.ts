@@ -23,4 +23,17 @@ export class EnumService {
     
   }
 
+  public getAllEnums(response) {
+    const readFile = fs.readFileSync('src/enum/enum.json');
+    const data=JSON.parse(readFile.toString());
+
+    return response.status(200).json({
+      success: true,
+      message: 'All enums fetched successfully.',
+      data: {
+        data: data
+      }
+    });
+  }
+
 }
