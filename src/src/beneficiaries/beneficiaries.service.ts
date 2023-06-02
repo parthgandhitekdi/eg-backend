@@ -358,6 +358,20 @@ export class BeneficiariesService {
                 enrolled_for_board
                 enrollement_status
               }
+              references {
+                id
+                name
+                first_name
+                last_name
+                middle_name
+                relation
+                contact_number
+                designation
+                document_id
+                type_of_document
+                context
+                context_id
+              }
               extended_users {
                 marital_status
                 designation
