@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import jwt_decode from 'jwt-decode';
 import { HasuraService } from 'src/services/hasura/hasura.service';
 import { UserService } from 'src/user.service';
 import { HasuraService as HasuraServiceFromServices } from '../services/hasura/hasura.service';
@@ -28,6 +27,7 @@ export class EventsService {
     'created_by',
     'end_date',
     'end_time',
+    'type',
     'location',
     'location_type',
     'start_date',
@@ -61,7 +61,7 @@ export class EventsService {
     let obj = {
       ...(req?.context_id && { context_id: req?.context_id }),
       ...(req?.context && { context: req?.context }),
-      "user_id": user_id,
+      "user_id": req.user_id ? req.user_id :user_id,
       "name":req.name,
       "created_by": user_id,
       "end_date": req.end_date,
@@ -76,6 +76,7 @@ export class EventsService {
     }
    
    const eventResult=await this.hasuraService.create(this.table, obj,this.returnFields)
+
    if(eventResult){
     const promises = []
     const query = []
@@ -93,12 +94,12 @@ export class EventsService {
       promises.push(this.hasuraService.create('attendance', iterator, this.attendanceReturnFields))
     }
     const createAttendees = await Promise.all(promises)
-
+let mappedData= createAttendees.map(data=> data.attendance)
   if (createAttendees) {
       return response.status(200).send({
         success: true,
         message: 'Event created successfully!',
-        data: {events:eventResult.events,attendance:createAttendees},
+        data: {events:eventResult.events,attendance:mappedData},
       });
     } else {
       return response.status(500).send({
@@ -117,46 +118,39 @@ export class EventsService {
   }
 
   public async getEventsList(req, header, response) {
-    //get keycloak id from token
-    console.log("req", req)
-    const authToken = header.header("authorization");
-    const decoded: any = jwt_decode(authToken);
-    let keycloak_id = decoded.sub;
-    console.log("keycloak_id", keycloak_id)
-    //get userid
-    let query2 = {
-      query: `query MyQuery {
-                users(where: {keycloak_id: {_eq: "${keycloak_id}" }}) {
-                  id
-                  keycloak_id
-                }
-              }`
-    }
-    const user = await this.hasuraService.postData(query2)
-    console.log("user", user.data.users[0])
-    // get eventslist by userid
+    const userDetail = await this.userService.ipUserInfo(header);
+    console.log("user details",userDetail.data.id)
     let getQuery = {
       query: `query MyQuery {
-        events(where: {created_by: {_eq: ${ user.data.users[0].id}}}) {
+        events(where: {created_by: {_eq: ${userDetail.data.id}}}) {
           id
-          context
-          context_id
-          created_by
-          end_date
-          end_time
           location
           location_type
+          name
+          reminders
           start_date
           start_time
           type
           updated_by
           user_id
+          attendances {
+            context
+            context_id
+            created_by
+            date_time
+            id
+            lat
+            long
+            rsvp
+            status
+            updated_by
+            user_id
+          }
         }
       }`
 
     }
     const eventsList = await this.hasuraService.postData(getQuery)
-    console.log("eventsList", eventsList)
     if (eventsList.data.events.length>0) {
       return response.status(200).send({
         success: true,
@@ -164,7 +158,7 @@ export class EventsService {
         data: eventsList.data,
       });
     } else {
-      return response.status(200).send({
+      return response.status(404).send({
         success: false,
         message: 'Events not found!',
         data: {},
@@ -172,7 +166,7 @@ export class EventsService {
     }
   }
 
-  findAll(request: any) {
+ public async findAll(request: any) {
     return this.hasuraService.findAll(this.table, request);
   }
 

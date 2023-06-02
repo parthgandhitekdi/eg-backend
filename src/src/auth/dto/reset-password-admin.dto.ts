@@ -1,13 +1,12 @@
-import {
-    IsNotEmpty, IsString
-} from 'class-validator';
+import { IsNotEmpty, IsString, MinLength } from 'class-validator';
 
 export class ResetPasswordAdminDTO {
-    @IsString()
-    @IsNotEmpty()
-    public id: string;
+	@IsNotEmpty()
+	@IsString()
+	@MinLength(1)
+	public id: string;
 
-    @IsNotEmpty()
-    @IsString()
-    public password: string
+	@IsNotEmpty()
+	@IsString()
+	public password: string;
 }

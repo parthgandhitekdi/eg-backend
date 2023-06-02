@@ -93,20 +93,29 @@ export class BeneficiariesService {
     });
   }
 
-  public async findAll(body: any, req: any, resp: any) {
+  public async findAll(body: any, req: any, resp: any) {   
     const user = await this.userService.ipUserInfo(req);
-    const { status, sortType } = body;
-    const page = body.page ? body.page : '1';
+   const status=body?.status
+   const sortType=body?.sortType ? body?.sortType : 'desc'
+    const page = body?.page ? body?.page : '1';
     const limit = body?.limit ? body?.limit : '10';
-
     let offset = 0;
     if (page > 1 && limit) {
       offset = parseInt(limit) * (page - 1);
     }
     let query = '';
-    if (status) {
-      let query = `{program_beneficiaries:{status:{_eq:${status}}}}`;
+    if (status && status !== "") {
+         query = `{program_beneficiaries:{status:{_eq:${status}}}}`;
     }
+    let search='';
+
+    if(body.search && body.search !== ""){
+     search=`{_or: [
+        { first_name: { _ilike: "%${body.search}%" } },
+        { last_name: { _ilike: "%${body.search}%" } }
+      ]} `
+    }
+
     var data = {
       query: `query MyQuery($limit:Int, $offset:Int) {
                     users_aggregate( where:   
@@ -115,7 +124,8 @@ export class BeneficiariesService {
                               {
                                 program_beneficiaries: {facilitator_id: {_eq: ${user.data.id}}}
                               },
-                             ${query}
+                             ${query},
+                             ${search}
                                                   
                           ]
                         }){
@@ -130,7 +140,8 @@ export class BeneficiariesService {
                             {
                               program_beneficiaries: {facilitator_id: {_eq: ${user.data.id}}}
                             },
-                            ${query} 
+                            ${query},
+                            ${search} 
                             
                         ]
                       },
@@ -249,7 +260,7 @@ export class BeneficiariesService {
     } else {
       return resp.status(200).json({
         success: true,
-        message: 'Benificiaries found successfully!',
+        message: 'Benificiaries found success!',
         data: {
           totalCount: count,
           data: mappedResponse?.map((e) => ({
@@ -548,7 +559,7 @@ export class BeneficiariesService {
         ],
       },
       document_status: {
-        beneficiaries: [
+        program_beneficiaries: [
           'user_id',
           'program_id',
           'academic_year_id',
@@ -766,7 +777,7 @@ export class BeneficiariesService {
             id: programDetails?.id ? programDetails.id : null,
             user_id: user_id,
 
-            subjects: JSON.stringify(req.subjects),
+            subjects: JSON.stringify(req.subjects).replace(/"/g, '\\"'),
           },
           userArr,
           update,
@@ -775,13 +786,13 @@ export class BeneficiariesService {
       case 'document_status': {
         // Update Document status data in Beneficiaries table
         const userArr =
-          PAGE_WISE_UPDATE_TABLE_DETAILS.document_status.beneficiaries;
-        const programDetails = beneficiaryUser.beneficiaries.find(
+          PAGE_WISE_UPDATE_TABLE_DETAILS.document_status.program_beneficiaries;
+        const programDetails = beneficiaryUser.program_beneficiaries.find(
           (data) =>
             req.id == data.user_id &&
             req.academic_year_id == data.academic_year_id,
         );
-        let tableName = 'beneficiaries';
+        let tableName = 'program_beneficiaries';
 
         await this.hasuraService.q(
           tableName,
