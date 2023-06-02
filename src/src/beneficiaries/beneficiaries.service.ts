@@ -296,6 +296,8 @@ export class BeneficiariesService {
               aadhar_token
               aadhar_verified
               address
+              address_line_1
+              address_line_2
               alternative_mobile_number
               block
               profile_url
@@ -306,6 +308,8 @@ export class BeneficiariesService {
               lat
               long
               block_village_id
+              is_duplicate
+              duplicate_reason
               program_beneficiaries {
                 id
                 enrollment_status
@@ -482,7 +486,16 @@ export class BeneficiariesService {
         users: ['first_name', 'last_name', 'middle_name', 'dob'],
       },
       add_aadhaar: {
-        users: ['aadhar_no'],
+        users: [
+          'aadhar_no',
+          'is_duplicate',
+          'duplicate_reason'
+        ],
+      },
+      add_aadhaar_verification: {
+        users: [
+          'aadhar_verified',
+        ],
       },
       add_contact: {
         core_beneficiaries: ['user_id', 'device_ownership', 'device_type'],
@@ -502,6 +515,8 @@ export class BeneficiariesService {
         users: [
           'lat',
           'long',
+          'address_line_1',
+          'address_line_2',
           'state',
           'district',
           'block',
@@ -603,8 +618,61 @@ export class BeneficiariesService {
       }
 
       case 'add_aadhaar': {
+        const aadhar_no = req.aadhar_no;
+
+        // Check if aadhaar already exists or not
+        let hasuraResponse = await this.hasuraServiceFromServices.findAll('users', { aadhar_no });
+
+        if (hasuraResponse?.data?.users_aggregate?.aggregate.count > 0 && req.is_duplicate === 'yes') {
+          // Update Users table data
+          const userArr = PAGE_WISE_UPDATE_TABLE_DETAILS.add_aadhaar.users;
+          const tableName = 'users';
+          await this.hasuraService.q(tableName, req, userArr, update);
+
+          // Mark other AGs as duplicate where duplicate reason is null
+          let updateQuery = `
+            mutation MyMutation {
+              update_users(
+                where: {
+                  _and: [
+                    { aadhar_no: { _eq: "${aadhar_no}" } },
+                    { duplicate_reason: { _is_null: true } }
+                    # { is_duplicate: { _neq: "yes" } },
+                  ]
+                },
+                _set: {
+                  is_duplicate: "yes",
+                  duplicate_reason: "SYSTEM_DETECTED_DUPLICATES"
+                }
+              ) {
+                affected_rows
+                returning {
+                  id
+                  aadhar_no
+                  is_duplicate
+                  duplicate_reason
+                }
+              }
+            }`;
+
+          const data = {
+            query: updateQuery
+          };
+
+          await this.hasuraServiceFromServices.getData(data);
+
+        } else {
+          return response.status(400).json({
+            success: false,
+            message: 'Duplicate AG detected!',
+          });
+        }
+        break;
+      }
+
+      case 'add_aadhaar_verification': {
         // Update Users table data
-        const userArr = PAGE_WISE_UPDATE_TABLE_DETAILS.add_aadhaar.users;
+        const userArr = PAGE_WISE_UPDATE_TABLE_DETAILS.add_aadhaar_verification.users;
         const tableName = 'users';
         await this.hasuraService.q(tableName, req, userArr, update);
         break;
@@ -891,6 +959,8 @@ export class BeneficiariesService {
           aadhar_token
           aadhar_verified
           address
+          address_line_1
+          address_line_2
           alternative_mobile_number
           block
           profile_url
@@ -901,6 +971,8 @@ export class BeneficiariesService {
           lat
           long
           block_village_id
+          is_duplicate
+          duplicate_reason
           program_beneficiaries {
             beneficiaries_found_at
             created_by
