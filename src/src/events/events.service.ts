@@ -364,6 +364,28 @@ export class EventsService {
 		}
 	}
 
+	public async updateAttendanceDetail(id: number, req: any, response: any) {
+		const tableName = 'attendance';
+		let result = await this.hasuraService.update(
+			+id,
+			tableName,
+			req,
+			this.attendanceReturnFields,
+		);
+		if (result.attendance) {
+			return response.status(200).send({
+				success: true,
+				message: 'Attendance Updated successfully!',
+				data: { attendance: result.attendance },
+			});
+		} else {
+			return response.status(500).send({
+				success: false,
+				message: 'Unable to Update Attendance!',
+				data: {},
+			});
+		}
+	}
 	remove(id: number) {
 		return this.hasuraService.delete(this.table, { id: +id });
 	}
