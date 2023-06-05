@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { AadhaarKycModule } from 'src/aadhaar_kyc/aadhaar_kyc.module';
+import { AadhaarKycModule } from 'src/modules/aadhaar_kyc/aadhaar_kyc.module';
 import { HelperModule } from 'src/helper/helper.module';
 import { HasuraModule } from 'src/services/hasura/hasura.module';
 import { KeycloakModule } from 'src/services/keycloak/keycloak.module';

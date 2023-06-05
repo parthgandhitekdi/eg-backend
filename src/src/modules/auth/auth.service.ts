@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import jwt_decode from 'jwt-decode';
-import { AadhaarKycService } from 'src/aadhaar_kyc/aadhaar_kyc.service';
+import { AadhaarKycService } from 'src/modules/aadhaar_kyc/aadhaar_kyc.service';
 import { HasuraService } from 'src/services/hasura/hasura.service';
 import { KeycloakService } from 'src/services/keycloak/keycloak.service';
 import { UserHelperService } from 'src/helper/userHelper.service';
@@ -412,7 +412,6 @@ export class AuthService {
 
 		// Generate random password
 		const password = `@${this.userHelperService.generateRandomPassword()}`;
-		// const password = body?.mobile;
 
 		// Generate username
 		let username = `${body.first_name}`;
@@ -581,8 +580,6 @@ export class AuthService {
 						6,
 					)}`,
 					data: {
-						// @TODO - remove OTP later
-						// otp: otp,
 						hash: fullhash,
 					},
 				};
@@ -664,13 +661,15 @@ export class AuthService {
 		let groupId = '';
 
 		if (req.role === 'beneficiary' || req.role === 'beneficiaries') {
-			programRoleTableName = 'beneficiaries';
+			programRoleTableName = 'program_beneficiaries';
 			groupId = 'facilitator_id';
+			req.facilitator_id = req.role_fields.faciliator_id;
 		}
 
 		if (req.role === 'facilitator' || req.role === 'facilitators') {
 			programRoleTableName = 'program_faciltators';
 			groupId = 'parent_ip';
+			req.parent_ip = req.role_fields.parent_ip;
 		}
 		console.log('tableName', programRoleTableName);
 		console.log('groupId', groupId);
@@ -678,8 +677,13 @@ export class AuthService {
 		if (user_id) {
 			await this.hasuraService.q(
 				`${programRoleTableName}`,
-				{ ...req, user_id },
-				[`${groupId}`, 'user_id'],
+				{
+					...req,
+					user_id,
+					program_id: 1,
+					academic_year_id: 1,
+				},
+				[`${groupId}`, 'user_id', 'program_id', 'academic_year_id'],
 			);
 		}
 
@@ -759,6 +763,7 @@ export class AuthService {
                 form_step_number
                 created_by
                 updated_by
+				academic_year_id
               }
               qualifications {
                 created_by

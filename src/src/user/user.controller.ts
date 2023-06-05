@@ -1,25 +1,27 @@
 import { HttpService } from '@nestjs/axios';
 import {
-  Body,
-  Controller,
-  Get,
-  HttpCode,
-  Param,
-  Post,
-  Put,
-  Query,
-  Req,
-  Res,
-  UsePipes,
-  ValidationPipe
+    Body,
+    Controller,
+    Get,
+    HttpCode,
+    Param,
+    Post,
+    Put,
+    Query,
+    Req,
+    Res, UseInterceptors, UsePipes,
+    ValidationPipe
 } from '@nestjs/common';
 import { Response } from 'express';
 import { lastValueFrom, map } from 'rxjs';
-import { HasuraService } from './hasura/hasura.service';
-import { CreateUserDto } from './helper/dto/create-user.dto';
-import { RegisterFacilitatorDto } from './helper/dto/register-facilitator.dto';
+import { HasuraService } from '../hasura/hasura.service';
+import { CreateUserDto } from '../helper/dto/create-user.dto';
+import { RegisterFacilitatorDto } from '../helper/dto/register-facilitator.dto';
+import { SentryInterceptor } from 'src/common/interceptors/sentry.interceptor';
 import { UserService } from './user.service';
 
+
+@UseInterceptors(SentryInterceptor)
 @Controller('/users')
 export class UserController {
   public url = process.env.HASURA_BASE_URL;

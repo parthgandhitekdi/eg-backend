@@ -7,10 +7,12 @@ import {
 	Req,
 	Res,
 	UseGuards,
+	UseInterceptors,
 	UsePipes,
 	ValidationPipe,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
+import { SentryInterceptor } from 'src/common/interceptors/sentry.interceptor';
 import { AuthGuard } from './auth.guard';
 import { AuthService } from './auth.service';
 import { GetMobileByUsernameSendOtpDTO } from './dto/get-mobile-by-username-send-otp.dto';
@@ -21,6 +23,7 @@ import { ResetPasswordAdminDTO } from './dto/reset-password-admin.dto';
 import { UserExistDTO } from './dto/user-exist.dto';
 import { UserOtpSendDTO } from './dto/username-otp.dto';
 
+@UseInterceptors(SentryInterceptor)
 @Controller('auth')
 export class AuthController {
 	constructor(public authService: AuthService) {}

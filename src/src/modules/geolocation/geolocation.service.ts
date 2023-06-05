@@ -17,7 +17,7 @@ export class GeolocationService {
       });
     }
 
-    var data = {
+    let data = {
       query: `query SearchAttendance {
         ${tableName}_aggregate(where:{${query}}) {
           aggregate {
@@ -50,7 +50,7 @@ export class GeolocationService {
   }
 
   async states() {
-    var data = {
+    let data = {
       query: `query MyQuery {
         address_aggregate(distinct_on: [state_name]) {
           aggregate {
@@ -77,7 +77,7 @@ export class GeolocationService {
   }
 
   async districts(state: string) {
-    var data = {
+    let data = {
       query: `query MyQuery {
         address_aggregate(distinct_on: [district_name], where: {state_name: {_eq: "${state}"}}) {
           aggregate {
@@ -103,7 +103,7 @@ export class GeolocationService {
   }
 
   async blocks(district: string) {
-    var data = {
+    let data = {
       query: `query MyQuery {
         address_aggregate(distinct_on: [block_name], where: {district_name: {_eq: "${district}"}}) {
           aggregate {
@@ -128,7 +128,7 @@ export class GeolocationService {
   }
 
   async villages(block: string) {
-    var data = {
+    let data = {
       query: `query MyQuery {
         address_aggregate(distinct_on: [village_ward_name], where: {block_name: {_eq: "${block}"}}) {
           aggregate {

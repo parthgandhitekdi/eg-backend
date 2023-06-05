@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { HasuraService } from 'src/services/hasura/hasura.service';
-import { UserService } from 'src/user.service';
+import { UserService } from 'src/user/user.service';
 import { HasuraService as HasuraServiceFromServices } from '../services/hasura/hasura.service';
 
 @Injectable()
@@ -166,7 +166,7 @@ export class EventsService {
               last_name
               middle_name
               profile_url
-              aadhar_verified   
+              aadhar_verified
             }
           }
         }
@@ -229,10 +229,10 @@ export class EventsService {
             last_name
             middle_name
             profile_url
-            aadhar_verified   
+            aadhar_verified
           }
         }
-       
+
       }
     }
     `,

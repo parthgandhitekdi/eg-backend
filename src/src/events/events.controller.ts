@@ -1,22 +1,25 @@
 import {
-	Body,
-	Controller,
-	Delete,
-	Get,
-	Param,
-	Patch,
-	Post,
-	Req,
-	Res,
-	UseGuards,
-	UsePipes,
-	ValidationPipe,
+    Body,
+    Controller,
+    Delete,
+    Get,
+    Param,
+    Patch,
+    Post,
+    Req,
+    Res,
+    UseGuards,
+    UseInterceptors,
+    UsePipes,
+    ValidationPipe
 } from '@nestjs/common';
 import { Request, Response } from 'express';
-import { AuthGuard } from 'src/auth/auth.guard';
+import { SentryInterceptor } from 'src/common/interceptors/sentry.interceptor';
+import { AuthGuard } from 'src/modules/auth/auth.guard';
 import { CreateEventDto } from './dto/create-event.dto';
 import { EventsService } from './events.service';
 
+@UseInterceptors(SentryInterceptor)
 @Controller('events')
 export class EventsController {
 	constructor(private readonly eventsService: EventsService) {}
