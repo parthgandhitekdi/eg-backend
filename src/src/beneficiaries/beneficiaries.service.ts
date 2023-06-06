@@ -719,8 +719,8 @@ export class BeneficiariesService {
 					tableName,
 					{
 						...req,
-						id: beneficiaryUser?.core_beneficiaries?.[0]?.id
-							? beneficiaryUser?.core_beneficiaries?.[0]?.id
+						id: beneficiaryUser?.core_beneficiaries?.id
+							? beneficiaryUser?.core_beneficiaries?.id
 							: null,
 						user_id: user_id,
 					},
@@ -747,8 +747,8 @@ export class BeneficiariesService {
 					tableName,
 					{
 						...req,
-						id: beneficiaryUser?.core_beneficiaries?.[0]?.id
-							? beneficiaryUser?.core_beneficiaries?.[0]?.id
+						id: beneficiaryUser?.core_beneficiaries?.id
+							? beneficiaryUser?.core_beneficiaries?.id
 							: null,
 						user_id: user_id,
 					},
@@ -786,8 +786,8 @@ export class BeneficiariesService {
 					tableName,
 					{
 						...req,
-						id: beneficiaryUser?.extended_users?.[0]?.id
-							? beneficiaryUser?.extended_users?.[0]?.id
+						id: beneficiaryUser?.extended_users?.id
+							? beneficiaryUser?.extended_users?.id
 							: null,
 						user_id,
 					},
@@ -803,13 +803,14 @@ export class BeneficiariesService {
 					PAGE_WISE_UPDATE_TABLE_DETAILS.edit_family
 						.core_beneficiaries;
 				let tableName = 'core_beneficiaries';
+				console.log(beneficiaryUser?.core_beneficiaries?.id);
 				await this.hasuraService.q(
 					tableName,
 					{
 						...req.father_details,
 						...req.mother_details,
-						id: beneficiaryUser?.core_beneficiaries?.[0]?.id
-							? beneficiaryUser?.core_beneficiaries?.[0]?.id
+						id: beneficiaryUser?.core_beneficiaries?.id
+							? beneficiaryUser?.core_beneficiaries?.id
 							: null,
 						user_id,
 					},
@@ -829,8 +830,8 @@ export class BeneficiariesService {
 					tableName,
 					{
 						...req,
-						id: beneficiaryUser?.core_beneficiaries?.[0]?.id
-							? beneficiaryUser?.core_beneficiaries?.[0]?.id
+						id: beneficiaryUser?.core_beneficiaries?.id
+							? beneficiaryUser?.core_beneficiaries?.id
 							: null,
 						user_id,
 					},
@@ -850,8 +851,8 @@ export class BeneficiariesService {
 					tableName,
 					{
 						...req,
-						id: beneficiaryUser?.core_beneficiaries?.[0]?.id
-							? beneficiaryUser?.core_beneficiaries?.[0]?.id
+						id: beneficiaryUser?.core_beneficiaries?.id
+							? beneficiaryUser?.core_beneficiaries?.id
 							: null,
 						user_id,
 					},
@@ -871,8 +872,8 @@ export class BeneficiariesService {
 					tableName,
 					{
 						...req,
-						id: beneficiaryUser?.core_beneficiaries?.[0]?.id
-							? beneficiaryUser?.core_beneficiaries?.[0]?.id
+						id: beneficiaryUser?.core_beneficiaries?.id
+							? beneficiaryUser?.core_beneficiaries?.id
 							: null,
 						user_id,
 					},
