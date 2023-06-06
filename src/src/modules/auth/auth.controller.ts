@@ -3,6 +3,7 @@ import {
 	Controller,
 	Get,
 	Param,
+	Patch,
 	Post,
 	Req,
 	Res,
@@ -15,6 +16,7 @@ import { Request, Response } from 'express';
 import { SentryInterceptor } from 'src/common/interceptors/sentry.interceptor';
 import { AuthGuard } from './auth.guard';
 import { AuthService } from './auth.service';
+import { AadharVerified } from './dto/aadhar-verify.dto';
 import { GetMobileByUsernameSendOtpDTO } from './dto/get-mobile-by-username-send-otp.dto';
 import { OtpSendDTO } from './dto/otp-send.dto';
 import { OtpVerifyDTO } from './dto/otp-verify.dto';
@@ -160,5 +162,16 @@ export class AuthController {
 			request,
 			response,
 		);
+	}
+
+	@Patch('/aadhar-kyc/:id')
+	@UseGuards(new AuthGuard())
+	@UsePipes(ValidationPipe)
+	public async verifyAdharKyc(
+		@Param('id') id: string,
+		@Body() req: AadharVerified,
+		@Res() response: any,
+	) {
+		return this.authService.verifyAadharKyc({ ...req, id: id }, response);
 	}
 }

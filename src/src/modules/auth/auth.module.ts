@@ -10,5 +10,6 @@ import { AuthService } from './auth.service';
 	imports: [KeycloakModule, HasuraModule, AadhaarKycModule, HelperModule],
 	controllers: [AuthController],
 	providers: [AuthService],
+	exports: [AuthService]
 })
-export class AuthModule {}
+export class AuthModule { }

@@ -315,7 +315,6 @@ export class BeneficiariesService {
                 id
                 enrollment_status
                 enrolled_for_board
-                type_of_enrollement
                 subjects
                 academic_year_id
                 payment_receipt_document_id
@@ -338,6 +337,7 @@ export class BeneficiariesService {
                 alternative_device_ownership
                 alternative_device_type
                 father_first_name
+				type_of_enrollement
                 father_middle_name
                 father_last_name
                 mother_first_name
@@ -394,7 +394,7 @@ export class BeneficiariesService {
 
 		const response = await this.hasuraServiceFromServices.getData(data);
 		let result = response?.data?.users_by_pk;
-		result.program_beneficiaries = result.program_beneficiaries?.[0];
+		result.program_beneficiaries = result.program_beneficiaries;
 		if (!result) {
 			return resp.status(404).send({
 				success: false,
@@ -1035,6 +1035,7 @@ export class BeneficiariesService {
             updated_by
             type_of_learner
             status
+			type_of_enrollement
             reason_of_leaving_education
             previous_school_type
             mobile_ownership

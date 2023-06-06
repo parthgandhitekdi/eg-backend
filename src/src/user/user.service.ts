@@ -189,6 +189,23 @@ export class UserService {
               role_title
               updated_by
               type
+              reference {
+                id
+                name
+                contact_number
+                type_of_document
+                designation
+                document_id
+                document_reference {
+                  id
+                  user_id
+                  name
+                  doument_type
+                  document_sub_type
+                  provider
+                  path
+                }
+              }
             }
             program_faciltators {
               parent_ip
@@ -205,6 +222,8 @@ export class UserService {
               village_knowledge_test
               status
               form_step_number
+              academic_year_id
+              qualification_ids
             }
             qualifications {
               created_by
@@ -215,6 +234,7 @@ export class UserService {
               start_year
               updated_by
               user_id
+              qualification_reference_document_id
               qualification_master {
                 context
                 context_id
@@ -223,6 +243,17 @@ export class UserService {
                 name
                 type
                 updated_by
+              }
+              document_reference {
+                id
+                user_id
+                name
+                context
+                context_id
+                doument_type
+                document_sub_type
+                provider
+                path
               }
             }
             interviews {
@@ -266,6 +297,22 @@ export class UserService {
               name
               doument_type
               document_sub_type
+            }
+            extended_users {
+              marital_status
+              designation
+              created_by
+              id
+              user_id
+              updated_by
+              social_category
+              qualification_id
+            }
+            references {
+              id
+              name
+              contact_number
+              designation
             }
           }
         }`,
@@ -634,6 +681,7 @@ export class UserService {
           user_id
           }
           experience {
+          id
           description
           end_year
           experience_in_years
@@ -652,6 +700,15 @@ export class UserService {
             document_id
             type_of_document
             designation
+            document_reference {
+              id
+              user_id
+              name
+              doument_type
+              document_sub_type
+              provider
+              path
+            }
             }
           }
           program_faciltators {
@@ -668,6 +725,8 @@ export class UserService {
           form_step_number
           created_by
           updated_by
+          academic_year_id
+          qualification_ids
           }
           qualifications {
           created_by
@@ -686,6 +745,17 @@ export class UserService {
             name
             type
             updated_by
+            }
+            document_reference {
+              id
+              user_id
+              name
+              context
+              context_id
+              doument_type
+              document_sub_type
+              provider
+              path
             }
           }
           interviews {
@@ -727,9 +797,16 @@ export class UserService {
           id
           user_id
           name
+          doument_type
           document_sub_type
           context
           context_id
+          }
+          references {
+            id
+            name
+            contact_number
+            designation
           }
         }}`,
     };

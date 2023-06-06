@@ -1,23 +1,24 @@
 import { HttpService } from '@nestjs/axios';
 import {
-    Body,
-    Controller,
-    Get,
-    HttpCode,
-    Param,
-    Post,
-    Put,
-    Query,
-    Req,
-    Res, UseInterceptors, UsePipes,
-    ValidationPipe
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  Param,
+  Post,
+  Put,
+  Query,
+  Req,
+  Res, UseGuards, UseInterceptors, UsePipes,
+  ValidationPipe
 } from '@nestjs/common';
 import { Response } from 'express';
 import { lastValueFrom, map } from 'rxjs';
+import { SentryInterceptor } from 'src/common/interceptors/sentry.interceptor';
+import { AuthGuard } from 'src/modules/auth/auth.guard';
 import { HasuraService } from '../hasura/hasura.service';
 import { CreateUserDto } from '../helper/dto/create-user.dto';
 import { RegisterFacilitatorDto } from '../helper/dto/register-facilitator.dto';
-import { SentryInterceptor } from 'src/common/interceptors/sentry.interceptor';
 import { UserService } from './user.service';
 
 
@@ -126,6 +127,7 @@ export class UserController {
 
   // users/ip_user_info by auth token.
   @Get('/ip_user_info')
+  @UseGuards(new AuthGuard())
   ipUserInfo(@Req() request: Request) {
     return this.userService.ipUserInfo(request);
   }
