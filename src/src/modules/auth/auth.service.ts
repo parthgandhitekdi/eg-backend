@@ -80,7 +80,7 @@ export class AuthService {
 		}
 	}
 
-	public async verifyAadharKyc(req: any, response: any) {
+	public async verifyAadhaarKyc(req: any, response: any) {
 		const tableName = 'users';
 		const result = await this.hasuraService.update(
 			req.id,

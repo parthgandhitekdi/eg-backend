@@ -26,10 +26,11 @@ export class UploadFileController {
 		@UploadedFile() file: Express.Multer.File,
 		@Param('id') id: number,
 		@Body('document_type') document_type: string,
+		@Body('document_sub_type') document_sub_type: string,
 		@Res() request: Request,
 		@Res() response: Response,
 	) {
-		await this.uploadFileService.addFile(file, id, document_type, response);
+		await this.uploadFileService.addFile(file, id, document_type, document_sub_type,response);
 	}
 
 	@Post('/attendance')

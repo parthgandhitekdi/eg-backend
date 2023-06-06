@@ -29,6 +29,7 @@ export class EventsService {
 		'end_time',
 		'type',
 		'location',
+		'master_trainer',
 		'location_type',
 		'start_date',
 		'start_time',
@@ -67,6 +68,7 @@ export class EventsService {
 			...(req?.context && { context: req?.context }),
 			user_id: req.user_id ? req.user_id : user_id,
 			name: req.name,
+			master_trainer:req.master_trainer,
 			created_by: user_id,
 			end_date: req.end_date,
 			end_time: req.end_time,
@@ -144,10 +146,16 @@ export class EventsService {
           location
           location_type
           name
+		  context
+		  context_id
+		  master_trainer
           reminders
+		  end_date
+		  end_time
           start_date
           start_time
           type
+		  created_by
           updated_by
           user_id
           attendances {
@@ -198,8 +206,9 @@ export class EventsService {
 		var data = {
 			query: `query searchById {
       events_by_pk(id: ${id}) {
-         reminders
+        reminders
         name
+		master_trainer
         end_date
         created_by
         context_id

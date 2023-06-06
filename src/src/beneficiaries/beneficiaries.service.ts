@@ -625,12 +625,12 @@ export class BeneficiariesService {
 			}
 
 			case 'add_aadhaar': {
-				const aadhar_no = req.aadhar_no;
+				const aadhaar_no = req.aadhar_no;
 
 				// Check if aadhaar already exists or not
 				let hasuraResponse =
 					await this.hasuraServiceFromServices.findAll('users', {
-						aadhar_no,
+						aadhaar_no,
 					});
 
 				if (
@@ -650,7 +650,7 @@ export class BeneficiariesService {
               update_users(
                 where: {
                   _and: [
-                    { aadhar_no: { _eq: "${aadhar_no}" } },
+                    { aadhar_no: { _eq: "${aadhaar_no}" } },
                     { duplicate_reason: { _is_null: true } }
                     # { is_duplicate: { _neq: "yes" } },
                   ]

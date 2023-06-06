@@ -1,6 +1,6 @@
 import { IsNotEmpty, IsString } from 'class-validator';
 
-export class AadharVerified {
+export class AadhaarVerified {
 	@IsString()
 	@IsNotEmpty()
 	public aadhar_verified: string;

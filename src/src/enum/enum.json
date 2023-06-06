@@ -151,8 +151,8 @@
 
   ],
   "DOCUMENT_LIST":[
-    {"title":"JAN_ADHAR_CARD","value":"jan_adhar_card"},
-    {"title":"ADHAR_CARD","value":"adhar_card"},
+    {"title":"JAN_AADHAAR_CARD","value":"jan_aadhaar_card"},
+    {"title":"AADHAAR_CARD","value":"aadhaar_card"},
     {"title":"BANK_PASSBOOK","value":"bank_passbook"},
     {"title":"PHOTO","value":"photo"},
     {"title":"CAST_CERTIFICATE","value":"cast_certificate"},

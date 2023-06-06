@@ -16,6 +16,7 @@ export class UploadFileService {
 		file: Express.Multer.File,
 		id: number,
 		document_type: string,
+    document_sub_type:string,
 		response: Response,
 	) {
 		const originalName = file.originalname
@@ -26,7 +27,7 @@ export class UploadFileService {
 		let key = `${name}${Date.now()}.${fileType}`;
 		const fileUrl = await this.s3Service.uploadFile(file, key);
 		const documentTypeArray = ['aadhaar_front', 'aadhaar_back',"profile_photo_1","profile_photo_2","profile_photo_3"];
-		if (documentTypeArray.includes(document_type)) {
+		if (documentTypeArray.includes(document_sub_type)) {
 			try {
 				const data = {
 					query: `query MyQuery {
@@ -34,7 +35,7 @@ export class UploadFileService {
                       id
                       username
                       mobile
-                      ${document_type}: documents(where: {document_sub_type: {_eq: "${document_type}"}}) {
+                      ${document_sub_type}: documents(where: {document_sub_type: {_eq: "${document_sub_type}"}}) {
                         id
                         name
                         doument_type
@@ -49,7 +50,7 @@ export class UploadFileService {
 					data,
 				);
 				let result = response?.data?.users;
-				let FileData: any = result[0][document_type];
+				let FileData: any = result[0][document_sub_type];
 				if (FileData.length > 0) {
 					const promise = [];
 					const promise2 = [];
@@ -79,7 +80,7 @@ export class UploadFileService {
 		if (fileUrl) {
 			let query = {
 				query: `mutation MyMutation {
-                  insert_documents(objects: {name: "${key}", path: "/user/docs", provider: "s3", updated_by: "${id}", user_id: "${id}", doument_type: "${document_type}", document_sub_type: "${document_type}", created_by: "${id}"}) {
+                  insert_documents(objects: {name: "${key}", path: "/user/docs", provider: "s3", updated_by: "${id}", user_id: "${id}", doument_type: "${document_type}", document_sub_type: "${document_sub_type}", created_by: "${id}"}) {
                     affected_rows
                     returning {
                       id
