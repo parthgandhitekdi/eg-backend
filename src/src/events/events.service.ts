@@ -177,6 +177,7 @@ export class EventsService {
               middle_name
               profile_url
               aadhar_verified
+			  aadhaar_verification_mode
             }
           }
         }
@@ -241,6 +242,7 @@ export class EventsService {
             middle_name
             profile_url
             aadhar_verified
+			aadhaar_verification_mode
           }
         }
 

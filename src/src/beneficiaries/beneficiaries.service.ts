@@ -486,13 +486,19 @@ export class BeneficiariesService {
 	async create(req: any, request, response, update = false) {
 		const user = await this.userService.ipUserInfo(request);
 		const { data: beneficiaryUser } = await this.userById(req.id);
+		if (beneficiaryUser === null) {
+			return response.status(400).json({
+				success: false,
+				message: 'Invalid user_id!',
+			});
+		}
 		const user_id = req?.id;
 		const PAGE_WISE_UPDATE_TABLE_DETAILS = {
 			edit_basic: {
 				users: ['first_name', 'last_name', 'middle_name', 'dob'],
 			},
 			add_ag_duplication: {
-				users: ['is_duplicate', 'duplicate_reason'],
+				users: ['aadhar_no', 'is_duplicate', 'duplicate_reason'],
 			},
 			add_aadhaar_verification: {
 				users: ['aadhar_verified'],
@@ -627,12 +633,12 @@ export class BeneficiariesService {
 			}
 
 			case 'add_ag_duplication': {
-				const aadhaar_no = beneficiaryUser.aadhar_no;
+				const aadhaar_no = req.aadhar_no;
 
 				if (!aadhaar_no) {
 					return response.status(400).json({
 						success: false,
-						message: 'Aadhaar number not found!',
+						message: 'Invalid Aadhaar number!',
 					});
 				}
 
@@ -664,6 +670,7 @@ export class BeneficiariesService {
 										{
 											_or: [
 												{ is_duplicate: { _neq: "yes" } },
+												{ is_duplicate: { _is_null: true } }
 												{ duplicate_reason: { _is_null: true } }
 											]
 										}
@@ -1109,7 +1116,9 @@ export class BeneficiariesService {
 
 		const response = await this.hasuraServiceFromServices.getData(data);
 		let result = response?.data?.users_by_pk;
-		result.program_beneficiaries = result.program_beneficiaries?.[0];
+		if (result) {
+			result.program_beneficiaries = result.program_beneficiaries?.[0];
+		}
 		return {
 			message: 'User data fetched successfully.',
 			data: result,
