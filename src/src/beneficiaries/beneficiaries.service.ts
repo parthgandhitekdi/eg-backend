@@ -910,6 +910,7 @@ export class BeneficiariesService {
 					userArr,
 					update,
 				);
+				break;
 			}
 			case 'document_status': {
 				// Update Document status data in Beneficiaries table
@@ -937,6 +938,7 @@ export class BeneficiariesService {
 					userArr,
 					update,
 				);
+				break;
 			}
 			case 'edit_reference': {
 				// Update References table data
