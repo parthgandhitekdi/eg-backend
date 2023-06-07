@@ -826,6 +826,7 @@ export class FacilitatorService {
 			query: `query searchById {        
         users_by_pk(id: ${id}) {
           first_name
+          middle_name
           id
           last_name
           dob

@@ -649,16 +649,34 @@ export class BeneficiariesService {
 					});
 
 				if (
-					hasuraResponse?.data?.users_aggregate?.aggregate.count >
-						0 &&
+					hasuraResponse?.data?.users_aggregate?.aggregate.count > 0
+					&&
+					req.is_duplicate !== 'yes'
+				) {
+					return response.status(400).json({
+						success: false,
+						message: 'Duplicate AG detected!',
+					});
+				}
+
+				if (
+					hasuraResponse?.data?.users_aggregate?.aggregate.count <= 0
+					&&
 					req.is_duplicate === 'yes'
 				) {
-					// Update Users table data
-					const userArr =
-						PAGE_WISE_UPDATE_TABLE_DETAILS.add_ag_duplication.users;
-					const tableName = 'users';
-					await this.hasuraService.q(tableName, req, userArr, update);
+					return response.status(400).json({
+						success: false,
+						message: 'Invalid duplicate flag!',
+					});
+				}
 
+				// Update Users table data
+				const userArr =
+					PAGE_WISE_UPDATE_TABLE_DETAILS.add_ag_duplication.users;
+				const tableName = 'users';
+				await this.hasuraService.q(tableName, req, userArr, update);
+
+				if (req.is_duplicate === 'yes') {
 					// Mark other AGs as duplicate where duplicate reason is null
 					let updateQuery = `
 						mutation MyMutation {
@@ -697,11 +715,6 @@ export class BeneficiariesService {
 					};
 
 					await this.hasuraServiceFromServices.getData(data);
-				} else {
-					return response.status(400).json({
-						success: false,
-						message: 'Duplicate AG detected!',
-					});
 				}
 				break;
 			}
