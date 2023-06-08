@@ -42,10 +42,15 @@ export class FacilitatorController {
 	//   return this.facilitatorService.update(+id, request);
 	// }
 
-	// @Delete(':id')
-	// remove(@Param('id') id: string) {
-	//   return this.facilitatorService.remove(+id);
-	// }
+	@Post('/forOrientation')
+	@UseGuards(new AuthGuard())
+	async getFacilitatorsForOrientation(
+		@Req() request: any,
+		@Body() body: any,
+		@Res() response: any
+	) {
+		return this.facilitatorService.getFacilitatorsForOrientation(request, body, response);
+	}
 
 	@Patch(':id')
 	@UseGuards(new AuthGuard())

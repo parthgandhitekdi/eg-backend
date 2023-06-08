@@ -132,190 +132,13 @@ export class UserService {
     var axios = require('axios');
     // Set query for getting data info
     var queryData = {
-      query: `query GetUserDetails($keycloak_id:uuid) {
+      query: `
+        query GetUserDetails($keycloak_id:uuid) {
           users(where: {keycloak_id: {_eq: $keycloak_id}}) {
             id
-            first_name
-            last_name
-            gender
-            email_id
-            dob
-            district_id
-            created_by
-            lat
-            long
-            mobile
-            password
-            aadhar_token
-            address
-            block_id
-            block_village_id
-            keycloak_id
-            state_id
-            updated_by
-            profile_url
-            program_users {
-              id
-              organisation_id
-              academic_year_id
-              program_id
-              role_id
-              status
-              user_id
-            }
-            core_faciltator {
-              created_by
-              device_ownership
-              device_type
-              id
-              pan_no
-              refreere
-              sourcing_channel
-              updated_by
-              user_id
-            }
-            experience {
-              user_id
-              start_year
-              end_year
-              experience_in_years
-              context
-              context_id
-              created_by
-              description
-              id
-              institution
-              organization
-              role_title
-              updated_by
-              type
-              reference {
-                id
-                name
-                contact_number
-                type_of_document
-                designation
-                document_id
-                document_reference {
-                  id
-                  user_id
-                  name
-                  doument_type
-                  document_sub_type
-                  provider
-                  path
-                }
-              }
-            }
-            program_faciltators {
-              parent_ip
-              academic_year_id
-              availability
-              created_by
-              has_social_work_exp
-              id
-              police_verification_done
-              program_id
-              social_background_verified_by_neighbours
-              updated_by
-              user_id
-              village_knowledge_test
-              status
-              form_step_number
-              academic_year_id
-              qualification_ids
-            }
-            qualifications {
-              created_by
-              end_year
-              id
-              institution
-              qualification_master_id
-              start_year
-              updated_by
-              user_id
-              qualification_reference_document_id
-              qualification_master {
-                context
-                context_id
-                created_by
-                id
-                name
-                type
-                updated_by
-              }
-              document_reference {
-                id
-                user_id
-                name
-                context
-                context_id
-                doument_type
-                document_sub_type
-                provider
-                path
-              }
-            }
-            interviews {
-              id
-              owner_user_id
-              end_date_time
-              comment
-              created_at
-              created_by
-              start_date_time
-              status
-              title
-              updated_at
-              updated_by
-              user_id
-              location_type
-              location
-              owner {
-                first_name
-                last_name
-                id
-              }
-            }
-            events {
-              context
-              context_id
-              created_by
-              end_date
-              end_time
-              id
-              location
-              location_type
-              start_date
-              start_time
-              updated_by
-              user_id
-            }
-            documents(order_by: {id: desc}){
-              id
-              user_id
-              name
-              doument_type
-              document_sub_type
-            }
-            extended_users {
-              marital_status
-              designation
-              created_by
-              id
-              user_id
-              updated_by
-              social_category
-              qualification_id
-            }
-            references {
-              id
-              name
-              contact_number
-              designation
-            }
           }
-        }`,
+        }
+      `,
       variables: { keycloak_id: keycloak_id },
     };
     // Initialize config
@@ -330,8 +153,8 @@ export class UserService {
     };
 
     const response = await axios(configData);
-    const userData = response?.data?.data?.users[0];
-    userData.program_faciltators = userData.program_faciltators[0];
+
+    const userData = (await this.userById(+response?.data?.data?.users[0].id)).data;
     
     return {
       status: response?.status,
@@ -690,6 +513,7 @@ export class UserService {
           organization
           role_title
           user_id
+          related_to_teaching
           type
           reference{
             id

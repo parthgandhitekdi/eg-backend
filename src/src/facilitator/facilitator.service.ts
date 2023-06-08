@@ -54,6 +54,222 @@ export class FacilitatorService {
 		// return this.hasuraService.getOne(+id, this.table, this.returnFields);
 	}
 
+	async getFacilitatorsForOrientation(request: any, body: any, response: any) {
+		const user = await this.userService.ipUserInfo(request);
+		
+		const page = isNaN(body.page) ? 1 : parseInt(body.page);
+		const limit = isNaN(body.limit) ? 15 : parseInt(body.limit);
+
+		let skip = page > 1 ? limit * (page - 1) : 0;
+		
+		const data = {
+			query: `
+				query MyQuery($limit:Int, $offset:Int) {
+					users_aggregate (
+						where: {
+							_and: [
+								{
+									program_faciltators: {
+										parent_ip: { _eq: "${user?.data?.program_users[0]?.organisation_id}" }
+										status: { _eq: "shortlisted_for_orientation" }
+									}
+								},
+								{
+									attendances_aggregate: {
+										count: { predicate: {_eq: 0} }
+									}
+								}
+							]
+						}
+					) {
+						aggregate {
+						  count
+						}
+					}
+					
+					users(
+						where: {
+							_and: [
+								{
+									program_faciltators: {
+										parent_ip: { _eq: "${user?.data?.program_users[0]?.organisation_id}" }
+										status: { _eq: "shortlisted_for_orientation" }
+									}
+								},
+								{
+									attendances_aggregate: {
+										count: { predicate: {_eq: 0} }
+									}
+								}
+							]
+						},
+						limit: $limit,
+						offset: $offset,
+						order_by: {created_at: desc}
+					) {
+						id
+						first_name
+						middle_name
+						last_name
+						dob
+						aadhar_token
+						address
+						block_id
+						block_village_id
+						created_by
+						district_id
+						email_id
+						gender
+						lat
+						long
+						mobile
+						password
+						state_id
+						updated_by
+						profile_url
+						state
+						district
+						block
+						village
+						grampanchayat
+						program_users {
+							id
+							organisation_id
+							academic_year_id
+							program_id
+							role_id
+							status
+							user_id
+						}
+						core_faciltator {
+							created_by
+							device_ownership
+							device_type
+							id
+							pan_no
+							refreere
+							sourcing_channel
+							updated_by
+							user_id
+						}
+						experience {
+							description
+							end_year
+							experience_in_years
+							institution
+							start_year
+							organization
+							role_title
+							user_id
+							type
+						}
+						program_faciltators {
+							parent_ip
+							availability
+							has_social_work_exp
+							id
+							police_verification_done
+							program_id
+							social_background_verified_by_neighbours
+							user_id
+							village_knowledge_test
+							status
+							form_step_number
+							created_by
+							updated_by
+							academic_year_id
+						}
+						qualifications {
+							created_by
+							end_year
+							id
+							institution
+							qualification_master_id
+							start_year
+							updated_by
+							user_id
+							qualification_master {
+							context
+							context_id
+							created_by
+							id
+							name
+							type
+							updated_by
+							}
+						}
+						interviews {
+							id
+							owner_user_id
+							end_date_time
+							comment
+							created_at
+							created_by
+							start_date_time
+							status
+							title
+							updated_at
+							updated_by
+							user_id
+							location_type
+							location
+							owner {
+							first_name
+							last_name
+							id
+							}
+						}
+						events {
+							context
+							context_id
+							created_by
+							end_date
+							end_time
+							id
+							location
+							location_type
+							start_date
+							start_time
+							updated_by
+							user_id
+						}
+						documents(order_by: {id: desc}){
+							id
+							user_id
+							name
+							doument_type
+							document_sub_type
+						}
+					}
+				}
+			`,
+			variables: {
+				limit: limit,
+				offset: skip,
+			},
+		};
+
+		const hasuraResponse = await this.hasuraService.getData(data);
+
+		const usersList = hasuraResponse?.data?.users;
+
+		const count = hasuraResponse?.data?.users_aggregate?.aggregate?.count || 0;
+
+		const totalPages = Math.ceil(count / limit);
+
+		return response.status(200).json({
+			status: true,
+			message: 'Facilitators data fetched successfully.',
+			data: {
+				totalCount: count,
+				data: usersList,
+				limit,
+				currentPage: page,
+				totalPages: `${totalPages}`,
+			},
+		});
+	}
+
 	async updateBasicDetails(id: number, body: any) {
 		// Update Users table data
 		const userArr = ['first_name', 'last_name', 'middle_name', 'dob'];
@@ -139,7 +355,7 @@ export class FacilitatorService {
 				tableName,
 				{
 					...body,
-					id: facilitatorUser?.extended_users.id ?? null,
+					id: facilitatorUser?.extended_users?.id ?? null,
 					user_id: id,
 				},
 				extendedUserArr,
@@ -622,6 +838,7 @@ export class FacilitatorService {
           first_name
           id
           last_name
+          middle_name
           dob
           aadhar_token
           address
