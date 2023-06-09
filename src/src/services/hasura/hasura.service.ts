@@ -250,7 +250,7 @@ export class HasuraService {
 		);
 	}
 
-	public async delete(tableName: String, item: Object, onlyFields: any = []) {
+	public async delete(tableName: String, item: Object, onlyFields: any = [], returnFields: any = null) {
 		return this.getResponce(
 			await lastValueFrom(
 				this.httpService
@@ -261,6 +261,7 @@ export class HasuraService {
 								tableName,
 								item,
 								onlyFields,
+								returnFields
 							),
 						},
 						{

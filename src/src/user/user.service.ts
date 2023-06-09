@@ -474,101 +474,139 @@ export class UserService {
           block
           village
           grampanchayat
-          program_users {
-          id
-          organisation_id
-          academic_year_id
-          program_id
-          role_id
-          status
-          user_id
-          }
-          extended_users{
-          id
-          marital_status
-          qualification_id
-          designation
-          social_category
-          created_by
-          updated_by
-          }
-          core_faciltator {
-          created_by
-          device_ownership
-          device_type
-          id
-          pan_no
-          refreere
-          sourcing_channel
-          updated_by
-          user_id
-          }
-          experience {
-          id
-          description
-          end_year
-          experience_in_years
-          institution
-          start_year
-          organization
-          role_title
-          user_id
-          related_to_teaching
-          type
-          reference{
+          aadhaar_front: documents(where: {document_sub_type: {_eq: "aadhaar_front"}}) {
             id
             name
-            context
-            context_id
-            contact_number
-            document_id
-            type_of_document
+            doument_type
+            document_sub_type
+            path
+          }
+          aadhaar_back: documents(where: {document_sub_type: {_eq: "aadhaar_back"}}) {
+            id
+            name
+            doument_type
+            document_sub_type
+            path
+          }
+          profile_photo_1: documents(where: {document_sub_type: {_eq: "profile_photo_1"}}) {
+            id
+            name
+            doument_type
+            document_sub_type
+            path
+          }
+          profile_photo_2: documents(where: {document_sub_type: {_eq: "profile_photo_2"}}) {
+            id
+            name
+            doument_type
+            document_sub_type
+            path
+          }
+          profile_photo_3: documents(where: {document_sub_type: {_eq: "profile_photo_3"}}) {
+            id
+            name
+            doument_type
+            document_sub_type
+            path
+          }
+          program_users {
+            id
+            organisation_id
+            academic_year_id
+            program_id
+            role_id
+            status
+            user_id
+          }
+          extended_users{
+            id
+            user_id
+            marital_status
+            qualification_id
             designation
-            document_reference {
+            social_category
+            created_by
+            updated_by
+          }
+          core_faciltator {
+            created_by
+            device_ownership
+            device_type
+            id
+            pan_no
+            refreere
+            sourcing_channel
+            updated_by
+            user_id
+          }
+          experience {
+            id
+            description
+            end_year
+            experience_in_years
+            institution
+            start_year
+            organization
+            role_title
+            user_id
+            type
+            related_to_teaching
+            reference {
               id
-              user_id
               name
-              doument_type
-              document_sub_type
-              provider
-              path
-            }
+              context
+              context_id
+              contact_number
+              document_id
+              type_of_document
+              designation
+              document_reference {
+                id
+                user_id
+                name
+                doument_type
+                document_sub_type
+                provider
+                path
+              }
             }
           }
           program_faciltators {
-          parent_ip
-          availability
-          has_social_work_exp
-          id
-          police_verification_done
-          program_id
-          social_background_verified_by_neighbours
-          user_id
-          village_knowledge_test
-          status
-          form_step_number
-          created_by
-          updated_by
-          academic_year_id
-          qualification_ids
+            parent_ip
+            documents_status
+            availability
+            has_social_work_exp
+            id
+            police_verification_done
+            program_id
+            social_background_verified_by_neighbours
+            user_id
+            village_knowledge_test
+            status
+            form_step_number
+            created_by
+            updated_by
+            academic_year_id
+            qualification_ids
           }
           qualifications {
-          created_by
-          end_year
-          id
-          institution
-          qualification_master_id
-          start_year
-          updated_by
-          user_id
-          qualification_master {
-            context
-            context_id
             created_by
+            end_year
             id
-            name
-            type
+            institution
+            qualification_master_id
+            start_year
             updated_by
+            user_id
+            qualification_reference_document_id
+            qualification_master {
+              context
+              context_id
+              created_by
+              id
+              name
+              type
+              updated_by
             }
             document_reference {
               id
@@ -583,48 +621,48 @@ export class UserService {
             }
           }
           interviews {
-          id
-          owner_user_id
-          end_date_time
-          comment
-          created_at
-          created_by
-          start_date_time
-          status
-          title
-          updated_at
-          updated_by
-          user_id
-          location_type
-          location
-          owner {
-            first_name
-            last_name
             id
+            owner_user_id
+            end_date_time
+            comment
+            created_at
+            created_by
+            start_date_time
+            status
+            title
+            updated_at
+            updated_by
+            user_id
+            location_type
+            location
+            owner {
+              first_name
+              last_name
+              id
             }
           }
           events {
-          context
-          context_id
-          created_by
-          end_date
-          end_time
-          id
-          location
-          location_type
-          start_date
-          start_time
-          updated_by
-          user_id
+            context
+            context_id
+            created_by
+            end_date
+            end_time
+            id
+            location
+            location_type
+            start_date
+            start_time
+            updated_by
+            user_id
           }
           documents(order_by: {id: desc}){
-          id
-          user_id
-          name
-          doument_type
-          document_sub_type
-          context
-          context_id
+            id
+            user_id
+            name
+            doument_type
+            document_sub_type
+            context
+            context_id
           }
           references {
             id
@@ -646,11 +684,15 @@ export class UserService {
         .pipe(map((res) => res.data)),
     );
     let result = response?.data?.users_by_pk;
-    if (result?.program_faciltators && result?.program_faciltators[0]) {
-      result.program_faciltators = result.program_faciltators[0];
-    } else {
-      result = { ...result, program_faciltators: {} };
+
+    for (const key of ['program_faciltators', 'profile_photo_1', 'profile_photo_2', 'profile_photo_3', 'aadhaar_front', 'aadhaar_back']) {
+      if (result?.[key] && result?.[key][0]) {
+        result[key] = result[key][0];
+      } else {
+        result = { ...result, [key]: {} };
+      }
     }
+
     let mappedResponse = result;
 
     if (result?.experience) {

@@ -244,7 +244,7 @@ export class QueryGeneratorService {
     `;
   }
 
-  deleteQuery(tName: String, item: any, onlyFields: any = []) {
+  deleteQuery(tName: String, item: any, onlyFields: any = [], returnFields: any = null) {
     let tableName = `delete_${tName}`;
     const keys = Object.keys(item);
 
@@ -262,9 +262,17 @@ export class QueryGeneratorService {
       return str;
     };
 
+    let returnFieldsQuery = ``;
+    if (returnFields && Array.isArray(returnFields) && returnFields.length > 0) {
+      returnFieldsQuery = `returning {
+        ${returnFields.join(',')}
+      }`;
+    }
+
     return `mutation DeleteQuery {
       ${tableName}(where: {${getObjStr(item, 'obj')}}) {
          affected_rows
+         ${returnFieldsQuery}
       }
     }
     `;
