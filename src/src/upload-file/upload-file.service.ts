@@ -171,4 +171,54 @@ export class UploadFileService {
 			});
 		}
 	}
+
+	async getDocumentById(id: string, response: Response) {
+		const hasuraData = {
+			query: `
+				query MyQuery {
+					documents_by_pk(id: ${id}) {
+						id
+						name
+						doument_type
+						document_sub_type
+						path
+						provider
+						context
+						context_id
+					}
+				}
+			`
+		};
+
+		const hasuraResponse = await this.hasuraService.getData(hasuraData);
+
+		const documentData = hasuraResponse?.data?.documents_by_pk;
+
+		if (documentData === null || !documentData.name) {
+			return response.status(400).send({
+				success: false,
+				message: 'Document not exists!',
+				data: null,
+			});
+		}
+
+		const fileUrl = await this.s3Service.getFileUrl(documentData.name);
+		if (fileUrl) {
+			return response.status(200).send({
+				success: true,
+				message: 'File url fethed successfully!',
+				data: {
+					key: documentData.name,
+					fileUrl: fileUrl,
+					documentData
+				},
+			});
+		} else {
+			return response.status(200).send({
+				success: false,
+				message: 'Unable to get file',
+				data: null,
+			});
+		}
+	}
 }

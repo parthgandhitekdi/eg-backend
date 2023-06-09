@@ -323,6 +323,7 @@ export class BeneficiariesService {
                 program_id
                 enrollment_number
                 status
+				type_of_enrollement
                 reason_for_status_update
                 documents_status
                 document_checklist
