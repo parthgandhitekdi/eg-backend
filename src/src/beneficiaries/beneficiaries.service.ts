@@ -990,11 +990,11 @@ export class BeneficiariesService {
 					tableName,
 					{
 						...req,
-						id: beneficiaryUser?.references?.id ?? null,
-						...(!beneficiaryUser?.references?.id && {
+						id: beneficiaryUser?.references?.[0]?.id ?? null,
+						...(!beneficiaryUser?.references?.[0]?.id && {
 							context: 'users',
 						}),
-						...(!beneficiaryUser?.references?.id && {
+						...(!beneficiaryUser?.references?.[0]?.id && {
 							context_id: user_id,
 						}),
 					},

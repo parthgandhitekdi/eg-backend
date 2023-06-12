@@ -63,16 +63,6 @@ export class FacilitatorController {
 	  return this.facilitatorService.removeExperience(+id, request, response);
 	}
 
-	@Delete('/reference/:id')
-	@UseGuards(new AuthGuard())
-	removeReference(
-		@Param('id') id: string,
-		@Req() request: any,
-		@Res() response: any
-	) {
-	  return this.facilitatorService.removeReference(+id, request, response);
-	}
-
 	@Patch(':id')
 	@UseGuards(new AuthGuard())
 	update(

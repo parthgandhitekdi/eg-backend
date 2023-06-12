@@ -9,12 +9,14 @@ import {
 	Put,
 	Req,
 	Res,
+	UseGuards,
 	UseInterceptors,
 	UsePipes,
 	ValidationPipe,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { SentryInterceptor } from 'src/common/interceptors/sentry.interceptor';
+import { AuthGuard } from 'src/modules/auth/auth.guard';
 import { BeneficiariesService } from './beneficiaries.service';
 import { RegisterBeneficiaryDto } from './dto/register-beneficiary.dto';
 import { StatusUpdateDTO } from './dto/status-update.dto';
@@ -38,6 +40,7 @@ export class BeneficiariesController {
 	// }
 
 	@Post()
+	@UseGuards(new AuthGuard())
 	findAll(
 		@Body() request: Record<string, any>,
 		@Req() req: any,
@@ -49,7 +52,9 @@ export class BeneficiariesController {
 	getStatuswiseCount(@Req() request: any, @Res() response: Response) {
 		return this.beneficiariesService.getStatuswiseCount(request, response);
 	}
+
 	@Get(':id')
+	@UseGuards(new AuthGuard())
 	findOne(@Param('id') id: string, @Res() response: Response) {
 		return this.beneficiariesService.findOne(+id, response);
 	}
@@ -69,6 +74,7 @@ export class BeneficiariesController {
 	}
 
 	@Patch(':id')
+	@UseGuards(new AuthGuard())
 	public async updateBeneficiary(
 		@Param('id') id: string,
 		@Body() req: Record<string, any>,
@@ -84,6 +90,7 @@ export class BeneficiariesController {
 	}
 
 	@Put('statusUpdate')
+	@UseGuards(new AuthGuard())
 	@UsePipes(ValidationPipe)
 	statusUpdate(@Body() request: StatusUpdateDTO) {
 		return this.beneficiariesService.statusUpdate(request);

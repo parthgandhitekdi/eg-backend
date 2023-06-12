@@ -533,8 +533,8 @@ export class AuthService {
 				if (body.role_fields.parent_ip) {
 					body.parent_ip = body.role_fields.parent_ip;
 				}
-				if (body.role_fields.faciliator_id) {
-					body.faciliator_id = body.role_fields.faciliator_id;
+				if (body.role_fields.facilitator_id) {
+					body.facilitator_id = body.role_fields.facilitator_id;
 				}
 				console.log('body 415', body);
 				const result = await this.newCreate(body);
@@ -692,7 +692,7 @@ export class AuthService {
 		if (req.role === 'beneficiary' || req.role === 'beneficiaries') {
 			programRoleTableName = 'program_beneficiaries';
 			groupId = 'facilitator_id';
-			req.facilitator_id = req.role_fields.faciliator_id;
+			req.facilitator_id = req.role_fields.facilitator_id;
 		}
 
 		if (req.role === 'facilitator' || req.role === 'facilitators') {

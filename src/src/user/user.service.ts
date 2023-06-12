@@ -154,7 +154,11 @@ export class UserService {
 
     const response = await axios(configData);
 
-    const userData = (await this.userById(+response?.data?.data?.users[0].id)).data;
+    let userData = null;
+    if (response?.data?.data?.users[0]) {
+      userData = (await this.userById(+response?.data?.data?.users[0].id)).data;
+    }
+
     
     return {
       status: response?.status,
@@ -455,6 +459,7 @@ export class UserService {
           middle_name
           alternative_mobile_number
           aadhar_token
+          aadhar_verified
           address
           block_id
           block_village_id
@@ -685,7 +690,7 @@ export class UserService {
     );
     let result = response?.data?.users_by_pk;
 
-    for (const key of ['program_faciltators', 'profile_photo_1', 'profile_photo_2', 'profile_photo_3', 'aadhaar_front', 'aadhaar_back']) {
+    for (const key of ['references', 'qualifications', 'program_faciltators', 'profile_photo_1', 'profile_photo_2', 'profile_photo_3', 'aadhaar_front', 'aadhaar_back']) {
       if (result?.[key] && result?.[key][0]) {
         result[key] = result[key][0];
       } else {
@@ -913,6 +918,7 @@ export class UserService {
       data: mappedResponse?.map((e) => ({
         ...e,
         ['program_faciltators']: e?.['program_faciltators']?.[0],
+        ['qualifications']: e?.['qualifications']?.[0],
       })),
       limit,
       currentPage: page,
