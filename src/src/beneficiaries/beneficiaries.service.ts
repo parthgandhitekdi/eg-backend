@@ -526,6 +526,7 @@ export class BeneficiariesService {
 				users: [
 					'lat',
 					'long',
+					'address',
 					'address_line_1',
 					'address_line_2',
 					'state',

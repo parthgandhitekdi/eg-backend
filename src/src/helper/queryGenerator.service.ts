@@ -269,6 +269,14 @@ export class QueryGeneratorService {
       }`;
     }
 
+    console.log(`mutation DeleteQuery {
+      ${tableName}(where: {${getObjStr(item, 'obj')}}) {
+         affected_rows
+         ${returnFieldsQuery}
+      }
+    }
+    `);
+
     return `mutation DeleteQuery {
       ${tableName}(where: {${getObjStr(item, 'obj')}}) {
          affected_rows

@@ -5,11 +5,19 @@
     { "title": "OTHER", "value": "other" }
   ],
   "QUALIFICATION": [
-    { "title": "BACHELORS", "value": "bachelors" },
-    { "title": "MASTERS", "value": "masters" },
-    { "title": "DIPLOMA", "value": "diploma" },
-    { "title": "POST_GRADUATE", "value": "post_graduate" },
-    { "title": "PH_D", "value": "ph_d" }
+    { "title": "QUALIFICATION_BACHELORS", "value": "bachelors" },
+    { "title": "QUALIFICATION_MASTERS", "value": "masters" },
+    { "title": "QUALIFICATION_DIPLOMA", "value": "diploma" },
+    { "title": "QUALIFICATION_POST_GRADUATE", "value": "post_graduate" },
+    { "title": "QUALIFICATION_PH_D", "value": "ph_d" },
+    { "title": "QUALIFICATION_PERSUING_GRADUATION", "value": "pursuing_graduation" }
+  ],
+  "TEACHING_QUALIFICATION":[
+    { "title": "TEACHING_QUALIFICATION_D_ED", "value": "d_ed" },
+    { "title": "TEACHING_QUALIFICATION_B_ED", "value": "b_ed" },
+    { "title": "TEACHING_QUALIFICATION_M_ED", "value": "m_ed" },
+    { "title": "TEACHING_QUALIFICATION_STC", "value": "stc" },
+    { "title": "TEACHING_QUALIFICATION_NONE", "value": "none" }
   ],
   "TEACHING_DEGREE": [
     { "title": "NO", "value": "no" },
@@ -42,7 +50,7 @@
     { "title": "FACILITATOR_STATUS_APPLIED", "value": "applied" },
     { "title": "FACILITATOR_STATUS_APPLICATION_SCREENED", "value": "application_screened" },
     { "title": "FACILITATOR_STATUS_SHORTLISTED_FOR_ORIENTATION", "value": "shortlisted_for_orientation" },
-    { "title": "FACILITATOR_STATUS_POTENTIAL_PRERAK", "value": "potential_prerak" },
+    { "title": "FACILITATOR_STATUS_PRAGATI_MOBILIZER", "value": "pragati_mobilizer" },
     { "title": "FACILITATOR_STATUS_SELECTED_FOR_TRAINING", "value": "selected_for_training" },
     { "title": "FACILITATOR_STATUS_SELECTED_FOR_ONBOARDING", "value": "selected_for_onboarding" },
     { "title": "FACILITATOR_STATUS_SELECTED_PRERAK", "value": "selected_prerak" },
@@ -82,7 +90,8 @@
     { "title": "6", "value": "6" },
     { "title": "7", "value": "7" },
     { "title": "8", "value": "8" },
-    { "title": "9", "value": "9" }
+    { "title": "9", "value": "9" },
+    { "title": "10", "value": "10" }
   ],
   "ENROLLEMENT_STATUS": [
     { "title": "ENROLLED", "value": "enrolled" },
@@ -125,9 +134,9 @@
     { "title": "SCHOOL_BEING_TOO_FAR_AWAY", "value": "school_being_too_far_away" },
     { "title": "DUE_TO_FAIL", "value": "fail" },
     { "title": "GIRL_NOT_WILLING_TO_PURSUE_FURTHER_STUDIES", "value": "girl_not_willing_to_pursue_further_studies" },
-    { "title": "SOCIAL / FAMILY PRESSURE", "value": "social_family_pressure" },
+    { "title": "SOCIAL_FAMILY_PRESSURE", "value": "social_family_pressure" },
     { "title": "ECONOMIC_DIFFICULTIES", "value": "economic_difficulties" },
-    { "title": "FRIENDS / FRIENDS LEAVING SCHOOL", "value": "friends_friends_leaving_school" },
+    { "title": "FRIENDS_FRIENDS_LEAVING_SCHOOL", "value": "friends_friends_leaving_school" },
     { "title": "DUE_TO_MARRIAGES", "value": "marriages" },
     { "title": "MIGRATION_RELATED_TO_EMPLOYMENT", "value": "migration_related_to_employment" }
   ],
@@ -186,5 +195,26 @@
     {"title":"SUPPORT_TO_STUDY_ONLINE","value":"support_to_study_online"},
     {"title":"SUPPORT_IN_PROBLEM_SOLVING","value":"support_in_problem_solving"},
     {"title":"OTHER","value":"other"}
+  ],
+  "REMINDERS": [
+    {"title":"REMINDERS_1_HOUR_BEFORE","value":"hour_1_before"},
+    {"title":"REMINDERS_1_DAY_BEFORE","value":"day_1_before"},
+    {"title":"REMINDERS_1_WEEK_BEFORE","value":"week_1_before"}
+  ],
+  "DROPOUT_REASONS": [
+    { "title": "DROPOUT_REASONS_FAMILY_ISSUE", "value": "family_issue" },
+    { "title": "DROPOUT_REASONS_COMMUNITY_ISSUE", "value": "community_issue" },
+    { "title": "DROPOUT_REASONS_GETTING_MARRIED", "value": "getting_married" },
+    { "title": "DROPOUT_REASONS_PERSONAL_REASONS", "value": "personal_reasons" },
+    { "title": "DROPOUT_REASONS_MOVING_AWAY", "value": "moving_away" },
+    { "title": "DROPOUT_REASONS_OTHER", "value": "other" }
+  ],
+  "REACTIVATE_REASONS": [
+    { "title": "REACTIVATE_REASONS_CAREER_ASPIRATIONS", "value": "career_aspirations" },
+    { "title": "REACTIVATE_REASONS_CONVINCED_BY_PRERAK", "value": "convinced_by_Prerak" },
+    { "title": "REACTIVATE_REASONS_MOVING_BACK", "value": "moved_back" },
+    { "title": "REACTIVATE_REASONS_ISSUE_RESOLVED", "value": "issue_resolved" },
+    { "title": "REACTIVATE_REASONS_CHANGED_MIND", "value": "changed_mind" },
+    { "title": "REACTIVATE_REASONS_OTHER", "value": "other" }
   ]
 }
