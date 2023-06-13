@@ -390,7 +390,7 @@ export class FacilitatorService {
 		let experience_id = body.id;
 		if (
 			experience_id &&
-			!facilitatorUser.experience.find(
+			!facilitatorUser[body.type].find(
 				(data) => data.id == experience_id,
 			)
 		) {
