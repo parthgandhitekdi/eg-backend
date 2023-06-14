@@ -68,7 +68,7 @@ export class EventsService {
 			...(req?.context && { context: req?.context }),
 			user_id: req.user_id ? req.user_id : user_id,
 			name: req.name,
-			master_trainer:req.master_trainer,
+			master_trainer: req.master_trainer,
 			created_by: user_id,
 			end_date: req.end_date,
 			end_time: req.end_time,
@@ -141,47 +141,47 @@ export class EventsService {
 		console.log('user details', userDetail.data.id);
 		let getQuery = {
 			query: `query MyQuery {
-        events(where: {created_by: {_eq: ${userDetail.data.id}}}) {
-          id
-          location
-          location_type
-          name
+		events(where: {created_by: {_eq: ${userDetail.data.id}}}) {
+		  id
+		  location
+		  location_type
+		  name
 		  context
 		  context_id
 		  master_trainer
-          reminders
+		  reminders
 		  end_date
 		  end_time
-          start_date
-          start_time
-          type
+		  start_date
+		  start_time
+		  type
 		  created_by
-          updated_by
-          user_id
-          attendances {
-            context
-            context_id
-            created_by
-            date_time
-            id
-            lat
-            long
-            rsvp
-            status
-            updated_by
-            user_id
-            user{
-              first_name
-              id
-              last_name
-              middle_name
-              profile_url
-              aadhar_verified
+		  updated_by
+		  user_id
+		  attendances {
+			context
+			context_id
+			created_by
+			date_time
+			id
+			lat
+			long
+			rsvp
+			status
+			updated_by
+			user_id
+			user{
+			  first_name
+			  id
+			  last_name
+			  middle_name
+			  profile_url
+			  aadhar_verified
 			  aadhaar_verification_mode
-            }
-          }
-        }
-      }`,
+			}
+		  }
+		}
+	  }`,
 		};
 		const eventsList = await this.hasuraService.postData(getQuery);
 		if (eventsList.data.events.length > 0) {
@@ -206,49 +206,55 @@ export class EventsService {
 	public async findOne(id: number, resp: any) {
 		var data = {
 			query: `query searchById {
-      events_by_pk(id: ${id}) {
-        reminders
-        name
+	  events_by_pk(id: ${id}) {
+		reminders
+		name
 		master_trainer
-        end_date
-        created_by
-        context_id
-        context
-        end_time
-        id
-        location
-        location_type
-        start_date
-        start_time
-        type
-        updated_by
-        user_id
-        attendances {
-          created_by
-          context
-          context_id
-          date_time
-          id
-          lat
-          user_id
-          updated_by
-          status
-          long
-          rsvp
-          user{
-            first_name
-            id
-            last_name
-            middle_name
-            profile_url
-            aadhar_verified
+		end_date
+		created_by
+		context_id
+		context
+		end_time
+		id
+		location
+		location_type
+		start_date
+		start_time
+		type
+		updated_by
+		user_id
+		attendances(order_by: {
+		  created_at: asc
+		  }) {
+		  created_by
+		  created_at
+		  context
+		  context_id
+		  date_time
+		  id
+		  lat
+		  user_id
+		  updated_by
+		  status
+		  long
+		  rsvp
+		  user{
+			first_name
+			id
+			last_name
+			middle_name
+			profile_url
+			aadhar_verified
 			aadhaar_verification_mode
-          }
-        }
+			program_faciltators{
+			documents_status
+			  }
+		  }
+		}
 
-      }
-    }
-    `,
+	  }
+	}
+	`,
 		};
 		const response = await this.hasuraServiceFromServices.getData(data);
 		let result = response?.data?.events_by_pk;
@@ -276,18 +282,18 @@ export class EventsService {
 			if (attendees && attendees.length > 0) {
 				const data = {
 					query: `query MyQuery {
-          events(where: {id: {_eq: ${id}}}){
-            id
-            user_id
-            name
-            created_by
-            updated_by
-            attendances{
-              id
-              user_id
-            }
-          }
-        }`,
+		  events(where: {id: {_eq: ${id}}}){
+			id
+			user_id
+			name
+			created_by
+			updated_by
+			attendances{
+			  id
+			  user_id
+			}
+		  }
+		}`,
 				};
 				const response = await this.hasuraServiceFromServices.getData(
 					data,

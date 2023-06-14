@@ -16,9 +16,17 @@ export class UploadFileService {
 		file: Express.Multer.File,
 		id: number,
 		document_type: string,
-    document_sub_type:string,
+		document_sub_type: string,
 		response: Response,
 	) {
+		if (!file) {
+			return response.status(400).send({
+				success: false,
+				status: 'Not Found',
+				message: 'Document Not Passed',
+				data: {},
+			});
+		}
 		const originalName = file.originalname
 			.split(' ')
 			.join('')
@@ -26,7 +34,13 @@ export class UploadFileService {
 		const [name, fileType] = originalName.split('.');
 		let key = `${name}${Date.now()}.${fileType}`;
 		const fileUrl = await this.s3Service.uploadFile(file, key);
-		const documentTypeArray = ['aadhaar_front', 'aadhaar_back',"profile_photo_1","profile_photo_2","profile_photo_3"];
+		const documentTypeArray = [
+			'aadhaar_front',
+			'aadhaar_back',
+			'profile_photo_1',
+			'profile_photo_2',
+			'profile_photo_3',
+		];
 		if (documentTypeArray.includes(document_sub_type)) {
 			try {
 				const data = {
@@ -80,7 +94,9 @@ export class UploadFileService {
 		if (fileUrl) {
 			let query = {
 				query: `mutation MyMutation {
-                  insert_documents(objects: {name: "${key}", path: "/user/docs", provider: "s3", updated_by: "${id}", user_id: "${id}", doument_type: "${document_type}", document_sub_type: "${document_sub_type}", created_by: "${id}"}) {
+                  insert_documents(objects: {name: "${key}", path: "/user/docs", provider: "s3", updated_by: "${id}", user_id: "${id}", doument_type: "${document_type}", document_sub_type: "${
+					document_sub_type ?? document_type
+				}", created_by: "${id}"}) {
                     affected_rows
                     returning {
                       id
@@ -187,7 +203,7 @@ export class UploadFileService {
 						context_id
 					}
 				}
-			`
+			`,
 		};
 
 		const hasuraResponse = await this.hasuraService.getData(hasuraData);
@@ -210,7 +226,7 @@ export class UploadFileService {
 				data: {
 					key: documentData.name,
 					fileUrl: fileUrl,
-					documentData
+					documentData,
 				},
 			});
 		} else {

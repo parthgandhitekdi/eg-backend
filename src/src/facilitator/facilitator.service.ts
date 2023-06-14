@@ -443,22 +443,24 @@ export class FacilitatorService {
 		if (keyExist.length) {
 			let tableName = 'references';
 			if (experience_id) {
-				referenceDetails = facilitatorUser.experience.find(
+				referenceDetails = facilitatorUser[body.type].find(
 					(data) => data.id == experience_id,
 				)?.reference;
 
-				if (referenceDetails.document_reference?.name) {
-					await this.s3Service.deletePhoto(referenceDetails.document_reference.name);
+				if (referenceDetails) {
+					if (referenceDetails?.document_reference?.name) {
+						await this.s3Service.deletePhoto(referenceDetails.document_reference.name);
+					}
+					
+					await this.hasuraService.delete(
+						'documents',
+						{
+							user_id: id,
+							context: 'references',
+							context_id: referenceDetails.id
+						},
+					);
 				}
-				
-				await this.hasuraService.delete(
-					'documents',
-					{
-						user_id: id,
-						context: 'references',
-						context_id: referenceDetails.id
-					},
-				);
 			}
 			referenceInfo = await this.hasuraService.q(
 				tableName,
@@ -468,9 +470,9 @@ export class FacilitatorService {
 					id: referenceDetails?.id ? referenceDetails?.id : null,
 
 					// If 'experienceInfo' has id then a new experience record has created
-					...(experienceInfo?.id && { context: 'experience' }),
-					...(experienceInfo?.id && {
-						context_id: experienceInfo.id,
+					...((experienceInfo?.id || !referenceDetails) && { context: 'experience' }),
+					...((experienceInfo?.id || !referenceDetails) && {
+						context_id: experienceInfo.id || experience_id,
 					}),
 				},
 				referencesArr,
@@ -488,7 +490,7 @@ export class FacilitatorService {
 				{
 					id: body?.reference_details?.document_id ?? null,
 					context: 'references',
-					context_id: referenceInfo?.id ? referenceInfo?.id : referenceDetails.id,
+					context_id: referenceInfo?.id ? referenceInfo?.id : referenceDetails?.id ? referenceDetails?.id : null,
 				},
 				documentsArr,
 				true,

@@ -213,6 +213,19 @@ export class BeneficiariesService {
                         facilitator_id
                         created_by
                         beneficiaries_found_at
+						document {
+							context
+							context_id
+							created_by
+							document_sub_type
+							doument_type
+							id
+							name
+							path
+							provider
+							updated_by
+							user_id
+						  }
                           }
                           core_beneficiaries {
                         career_aspiration
@@ -364,6 +377,22 @@ export class BeneficiariesService {
                 facilitator_id
                 created_by
                 beneficiaries_found_at
+				document {
+					context
+					context_id
+					created_by
+					document_sub_type
+					doument_type
+					id
+					name
+					path
+					provider
+					updated_by
+					user_id
+				  }
+                type_of_support_needed
+                learning_motivation
+                learning_level
               }
               core_beneficiaries {
                 career_aspiration
@@ -602,20 +631,32 @@ export class BeneficiariesService {
 					'type_of_learner',
 					'last_standard_of_education',
 					'last_standard_of_education_year',
+					'previous_school_type',
 					'reason_of_leaving_education',
 				],
+				program_beneficiaries: ['learning_level'],
+			},
+			edit_education: {
+				core_beneficiaries: [
+					'user_id',
+					'type_of_learner',
+					'last_standard_of_education',
+					'last_standard_of_education_year',
+					'previous_school_type',
+					'reason_of_leaving_education',
+				],
+				program_beneficiaries: ['learning_level'],
+			},
+			add_other_details: {
 				program_beneficiaries: [
 					'learning_motivation',
 					'type_of_support_needed',
 				],
 			},
-			edit_education: {
-				core_beneficiaries: [
-					'user_id',
-					'last_standard_of_education',
-					'last_standard_of_education_year',
-					'previous_school_type',
-					'reason_of_leaving_education',
+			edit_other_details: {
+				program_beneficiaries: [
+					'learning_motivation',
+					'type_of_support_needed',
 				],
 			},
 			edit_further_studies: {
@@ -688,7 +729,7 @@ export class BeneficiariesService {
 
 				if (
 					hasuraResponse?.data?.users_aggregate?.aggregate.count >
-					0 &&
+						0 &&
 					req.is_duplicate !== 'yes'
 				) {
 					return response.status(400).json({
@@ -699,7 +740,7 @@ export class BeneficiariesService {
 
 				if (
 					hasuraResponse?.data?.users_aggregate?.aggregate.count <=
-				    0 &&
+						0 &&
 					req.is_duplicate === 'yes'
 				) {
 					return response.status(400).json({
@@ -900,7 +941,7 @@ export class BeneficiariesService {
 				// Update educational data in program_beneficiaries table
 				userArr =
 					PAGE_WISE_UPDATE_TABLE_DETAILS.add_education
-					.program_beneficiaries;
+						.program_beneficiaries;
 				const programDetails = beneficiaryUser.program_beneficiaries;
 				tableName = 'program_beneficiaries';
 
@@ -918,7 +959,7 @@ export class BeneficiariesService {
 
 			case 'edit_education': {
 				// Update Core beneficiaries table data
-				const userArr =
+				let userArr =
 					PAGE_WISE_UPDATE_TABLE_DETAILS.edit_education
 						.core_beneficiaries;
 				let tableName = 'core_beneficiaries';
@@ -930,6 +971,64 @@ export class BeneficiariesService {
 							? beneficiaryUser?.core_beneficiaries?.id
 							: null,
 						user_id,
+					},
+					userArr,
+					update,
+				);
+
+				// Update educational data in program_beneficiaries table
+				userArr =
+					PAGE_WISE_UPDATE_TABLE_DETAILS.add_education
+						.program_beneficiaries;
+				const programDetails = beneficiaryUser.program_beneficiaries;
+				tableName = 'program_beneficiaries';
+
+				await this.hasuraService.q(
+					tableName,
+					{
+						...req,
+						id: programDetails?.id ? programDetails.id : null,
+					},
+					userArr,
+					update,
+				);
+
+				break;
+			}
+
+			case 'add_other_details': {
+				// Update other details in program_beneficiaries table
+				let userArr =
+					PAGE_WISE_UPDATE_TABLE_DETAILS.add_other_details
+						.program_beneficiaries;
+				const programDetails = beneficiaryUser.program_beneficiaries;
+				let tableName = 'program_beneficiaries';
+
+				await this.hasuraService.q(
+					tableName,
+					{
+						...req,
+						id: programDetails?.id ? programDetails.id : null,
+					},
+					userArr,
+					update,
+				);
+				break;
+			}
+
+			case 'edit_other_details': {
+				// Update other details in program_beneficiaries table
+				let userArr =
+					PAGE_WISE_UPDATE_TABLE_DETAILS.add_other_details
+						.program_beneficiaries;
+				const programDetails = beneficiaryUser.program_beneficiaries;
+				let tableName = 'program_beneficiaries';
+
+				await this.hasuraService.q(
+					tableName,
+					{
+						...req,
+						id: programDetails?.id ? programDetails.id : null,
 					},
 					userArr,
 					update,
@@ -1137,6 +1236,20 @@ export class BeneficiariesService {
             documents_status
             learning_motivation
             type_of_support_needed
+			learning_level
+			document {
+				context
+				context_id
+				created_by
+				document_sub_type
+				doument_type
+				id
+				name
+				path
+				provider
+				updated_by
+				user_id
+			  }
           }
             core_beneficiaries {
             career_aspiration
