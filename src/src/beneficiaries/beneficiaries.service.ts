@@ -95,6 +95,13 @@ export class BeneficiariesService {
 
 	public async findAll(body: any, req: any, resp: any) {
 		const user = await this.userService.ipUserInfo(req);
+		if (!user?.data?.id) {
+			return resp.status(404).send({
+				success: false,
+				message: 'Invalid Facilitator',
+				data: {},
+			});
+		}
 		const status = body?.status;
 		const sortType = body?.sortType ? body?.sortType : 'desc';
 		const page = body?.page ? body?.page : '1';
@@ -194,6 +201,19 @@ export class BeneficiariesService {
 						updated_by
 						village
 						username
+						documents{
+						context
+						context_id
+						created_by
+						document_sub_type
+						doument_type
+						id
+						name
+						path
+						provider
+						updated_by
+						user_id
+						  }
                         program_beneficiaries{
                         id
                         enrollment_status
@@ -283,10 +303,10 @@ export class BeneficiariesService {
 		const totalPages = Math.ceil(count / limit);
 
 		if (!mappedResponse || mappedResponse.length < 1) {
-			return resp.status(404).send({
+			return resp.status(200).send({
 				success: false,
 				status: 'Not Found',
-				message: 'Benificiaries Not Found',
+				message: 'Beneficiaries Not Found',
 				data: {},
 			});
 		} else {
@@ -358,7 +378,20 @@ export class BeneficiariesService {
 				updated_by
 				village
 				username
-              program_beneficiaries {
+				documents{
+				context
+				context_id
+				created_by
+				document_sub_type
+				doument_type
+				id
+				name
+				path
+				provider
+				updated_by
+				user_id
+				  }
+                program_beneficiaries {
                 id
                 enrollment_status
                 enrolled_for_board
@@ -458,7 +491,6 @@ export class BeneficiariesService {
 
 		const response = await this.hasuraServiceFromServices.getData(data);
 		let result = response?.data?.users_by_pk;
-		result.program_beneficiaries = result.program_beneficiaries?.[0];
 		if (!result) {
 			return resp.status(404).send({
 				success: false,
@@ -467,6 +499,7 @@ export class BeneficiariesService {
 				data: {},
 			});
 		} else {
+			result.program_beneficiaries = result?.program_beneficiaries?.[0];
 			return resp.status(200).json({
 				success: true,
 				message: 'Benificiaries found successfully!',

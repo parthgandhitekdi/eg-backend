@@ -428,73 +428,83 @@ export class FacilitatorService {
 			experienceInfo = experienceInfo.experience;
 		}
 
-		// Update Reference table data
-		const referencesArr = [
-			'name',
-			'contact_number',
-			'type_of_document',
-			'document_id',
-			'context',
-			'context_id',
-		];
-		keyExist = referencesArr.filter((e) => Object.keys(body.reference_details).includes(e));
-		let referenceInfo;
-		let referenceDetails;
-		if (keyExist.length) {
-			let tableName = 'references';
-			if (experience_id) {
-				referenceDetails = facilitatorUser[body.type].find(
-					(data) => data.id == experience_id,
-				)?.reference;
-
-				if (referenceDetails) {
-					if (referenceDetails?.document_reference?.name) {
-						await this.s3Service.deletePhoto(referenceDetails.document_reference.name);
+		if (
+				body.reference_details
+			&& typeof body.reference_details === 'object'
+			&& Object.keys(body.reference_details).length
+		) {
+			// Update Reference table data
+			const referencesArr = [
+				'name',
+				'contact_number',
+				'type_of_document',
+				'document_id',
+				'context',
+				'context_id',
+			];
+			keyExist = referencesArr.filter((e) => Object.keys(body.reference_details).includes(e));
+			let referenceInfo;
+			let referenceDetails;
+			if (keyExist.length) {
+				let tableName = 'references';
+				if (experience_id) {
+					referenceDetails = facilitatorUser[body.type].find(
+						(data) => data.id == experience_id,
+					)?.reference;
+	
+					if (referenceDetails) {
+						if (referenceDetails?.document_reference?.name) {
+							await this.s3Service.deletePhoto(referenceDetails.document_reference.name);
+						}
+						
+						await this.hasuraService.delete(
+							'documents',
+							{
+								user_id: id,
+								context: 'references',
+								context_id: referenceDetails.id
+							},
+						);
 					}
-					
-					await this.hasuraService.delete(
-						'documents',
-						{
-							user_id: id,
-							context: 'references',
-							context_id: referenceDetails.id
-						},
-					);
 				}
+				referenceInfo = await this.hasuraService.q(
+					tableName,
+					{
+						...body.reference_details,
+						...(
+							(!isNaN(parseInt(body.reference_details?.document_id)))
+							&&
+							{ document_id: body.reference_details?.document_id }
+						),
+						id: referenceDetails?.id ? referenceDetails?.id : null,
+	
+						// If 'experienceInfo' has id then a new experience record has created
+						...((experienceInfo?.id || !referenceDetails) && { context: 'experience' }),
+						...((experienceInfo?.id || !referenceDetails) && {
+							context_id: experienceInfo.id || experience_id,
+						}),
+					},
+					referencesArr,
+					true,
+				);
+				referenceInfo = referenceInfo.references;
 			}
-			referenceInfo = await this.hasuraService.q(
-				tableName,
-				{
-					...body.reference_details,
-					document_id: body.reference_details?.document_id,
-					id: referenceDetails?.id ? referenceDetails?.id : null,
-
-					// If 'experienceInfo' has id then a new experience record has created
-					...((experienceInfo?.id || !referenceDetails) && { context: 'experience' }),
-					...((experienceInfo?.id || !referenceDetails) && {
-						context_id: experienceInfo.id || experience_id,
-					}),
-				},
-				referencesArr,
-				true,
-			);
-			referenceInfo = referenceInfo.references;
-		}
-
-		// Update Documents table data
-		if (body?.reference_details?.document_id) {
-			const documentsArr = ['context', 'context_id'];
-			let tableName = 'documents';
-			await this.hasuraService.q(
-				tableName,
-				{
-					id: body?.reference_details?.document_id ?? null,
-					context: 'references',
-					context_id: referenceInfo?.id ? referenceInfo?.id : referenceDetails?.id ? referenceDetails?.id : null,
-				},
-				documentsArr,
-				true,
-			);
+	
+			// Update Documents table data
+			if (body?.reference_details?.document_id) {
+				const documentsArr = ['context', 'context_id'];
+				let tableName = 'documents';
+				await this.hasuraService.q(
+					tableName,
+					{
+						id: body?.reference_details?.document_id ?? null,
+						context: 'references',
+						context_id: referenceInfo?.id ? referenceInfo?.id : referenceDetails?.id ? referenceDetails?.id : null,
+					},
+					documentsArr,
+					true,
+				);
+			}
 		}
 	}
 

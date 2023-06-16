@@ -111,7 +111,7 @@
 		{ "title": "PRAGATI_SYC", "value": "pragati_syc" }
 	],
 	"LAST_STANDARD_OF_EDUCATION": [
-		{ "title": "0", "value": "0" },
+		{ "title": "NA", "value": "na" },
 		{ "title": "1", "value": "1" },
 		{ "title": "2", "value": "2" },
 		{ "title": "3", "value": "3" },
@@ -150,8 +150,11 @@
 	],
 	"BENEFICIARY_MARITAL_STATUS": [
 		{ "title": "BENEFICIARY_MARITAL_STATUS_MARRIED", "value": "married" },
-		{"title": "BENEFICIARY_MARITAL_STATUS_UNMARRIED","value": "unmarried"},
-    { "title": "BENEFICIARY_MARITAL_STATUS_SINGLE", "value": "single" }
+		{
+			"title": "BENEFICIARY_MARITAL_STATUS_UNMARRIED",
+			"value": "unmarried"
+		},
+		{ "title": "BENEFICIARY_MARITAL_STATUS_SINGLE", "value": "single" }
 	],
 	"FACILITATOR_MARITAL_STATUS": [
 		{ "title": "FACILITATOR_MARITAL_STATUS_SINGLE", "value": "single" },
@@ -163,7 +166,71 @@
 		},
 		{ "title": "FACILITATOR_MARITAL_STATUS_OTHER", "value": "other" }
 	],
+	"FACILITATOR_REASONS_FOR_QUIT": [
+		{
+			"title": "FACILITATOR_REASONS_FOR_QUIT_GOT_ANOTHER_JOB",
+			"value": "got_another_job"
+		},
+		{
+			"title": "FACILITATOR_REASONS_FOR_QUIT_DO_NOT_WANT_TO_DO_JOB",
+			"value": "do_not_want_to_do_job"
+		},
+		{
+			"title": "FACILITATOR_REASONS_FOR_QUIT_LOT_OF_WORK",
+			"value": "lot_of_work"
+		},
+		{
+			"title": "FACILITATOR_REASONS_FOR_QUIT_DIFFICULT_JOB",
+			"value": "difficult_job"
+		},
+		{
+			"title": "FACILITATOR_REASONS_FOR_QUIT_LESS_SALARY",
+			"value": "less_salary"
+		},
+		{
+			"title": "FACILITATOR_REASONS_FOR_QUIT_ORGANIZATION_NOT_SUPPORTIVE",
+			"value": "organization_not_supportive"
+		},
+		{
+			"title": "FACILITATOR_REASONS_FOR_QUIT_FAMILY_REASON",
+			"value": "family_reason"
+		},
+		{
+			"title": "FACILITATOR_REASONS_FOR_QUIT_MIGRATION",
+			"value": "migration"
+		},
+		{
+			"title": "FACILITATOR_REASONS_FOR_QUIT_NO_FUTURE_BENEFIT_IN_THIS_JOB",
+			"value": "no_future_benefit_in_this_job"
+		}
+	],
+	"FACILITATOR_REASONS_FOR_RUSTICATE": [
+		{
+			"title": "FACILITATOR_REASONS_FOR_RUSTICATE_POSH_MISCONDUCT",
+			"value": "posh_misconduct"
+		},
+		{
+			"title": "FACILITATOR_REASONS_FOR_RUSTICATE_FINANCIAL_CORRUPTION",
+			"value": "financial_corruption"
+		},
+		{
+			"title": "FACILITATOR_REASONS_FOR_RUSTICATE_VIOLATION_OF_POLICY",
+			"value": "violation_of_policy"
+		},
+		{
+			"title": "FACILITATOR_REASONS_FOR_RUSTICATE_CRIMINAL_ACTIVITY",
+			"value": "criminal_activity"
+		},
+		{
+			"title": "FACILITATOR_REASONS_FOR_RUSTICATE_ACT_OF_MISCONDUCT_MISBEHAVIOUR",
+			"value": "act_of_misconduct_misbehaviour"
+		}
+	],
 	"REASON_OF_LEAVING_EDUCATION": [
+		{
+			"title": "NA",
+			"value": "na"
+		},
 		{
 			"title": "SCHOOL_BEING_TOO_FAR_AWAY",
 			"value": "school_being_too_far_away"
@@ -220,6 +287,7 @@
 	],
 	"DOCUMENT_STATUS": [
 		{ "title": "NOT_AVAILABLE", "value": "not_available" },
+		{ "title": "NOT_APPLICABLE", "value": "not_applicable" },
 		{ "title": "UPDATE_REQUIRED", "value": "update_required" },
 		{
 			"title": "APPLIED_NEW_FOR_CHANGE",
