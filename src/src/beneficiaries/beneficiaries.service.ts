@@ -1239,7 +1239,6 @@ export class BeneficiariesService {
 			middle_name
 			mobile
 			mobile_no_verified
-			password
 			pincode
 			profile_photo_1
 			profile_photo_2

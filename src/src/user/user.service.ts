@@ -494,7 +494,6 @@ export class UserService {
 		  middle_name
 		  mobile
 		  mobile_no_verified
-		  password
 		  pincode
 		  profile_url
 		  state
@@ -822,7 +821,6 @@ export class UserService {
 		  lat
 		  long
 		  mobile
-		  password
 		  state_id
 		  updated_by
 		  profile_url
