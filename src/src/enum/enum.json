@@ -257,6 +257,10 @@
 	],
 	"PREVIOUS_SCHOOL_TYPE": [
 		{
+			"title": "NA",
+			"value": "na"
+		},
+		{
 			"title": "PREVIOUS_SCHOOL_TYPE_PRIVATE_SCHOOL",
 			"value": "private_school"
 		},

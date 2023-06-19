@@ -681,6 +681,7 @@ export class AuthService {
 			'last_name',
 			'mobile',
 			'email_id',
+			'dob',
 			'keycloak_id',
 			'username',
 		]);

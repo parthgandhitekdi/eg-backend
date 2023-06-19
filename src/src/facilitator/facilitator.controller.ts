@@ -13,8 +13,8 @@ import {
 	ValidationPipe,
 } from '@nestjs/common';
 import { SentryInterceptor } from 'src/common/interceptors/sentry.interceptor';
-import { FilterFacilitatorDto } from './dto/filter-facilitator.dto';
 import { AuthGuard } from '../modules/auth/auth.guard';
+import { FilterFacilitatorDto } from './dto/filter-facilitator.dto';
 import { FacilitatorService } from './facilitator.service';
 
 @UseInterceptors(SentryInterceptor)
@@ -77,5 +77,16 @@ export class FacilitatorController {
 	@UsePipes(ValidationPipe)
 	async getFacilitators(@Req() req: any, @Body() body: FilterFacilitatorDto) {
 		return this.facilitatorService.getFacilitators(req, body);
+	}
+
+	
+	@Post('/exportCsv')
+	@UseGuards(new AuthGuard())
+	async exportFileToCsv(
+		@Req() request: any,
+		@Body() body: any,
+		@Res() response: any
+	) {
+		return this.facilitatorService.exportFileToCsv(request,body, response);
 	}
 }
