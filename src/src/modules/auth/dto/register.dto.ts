@@ -20,8 +20,8 @@ export class RegisterDTO {
 	@IsNotEmpty()
 	role_fields: {};
 
-	@IsString()
-	@IsNotEmpty()
-	@Matches(/^(19|20)\d\d[-/.](0[1-9]|1[012])[-/.](0[1-9]|[12]\d|3[01])$/)
-	dob: string;
+	// @IsString()
+	// @IsNotEmpty()
+	// @Matches(/^(19|20)\d\d[-/.](0[1-9]|1[012])[-/.](0[1-9]|[12]\d|3[01])$/)
+	// dob: string;
 }

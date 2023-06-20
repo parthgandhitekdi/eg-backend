@@ -536,6 +536,9 @@ export class AuthService {
 				if (body.role_fields.facilitator_id) {
 					body.facilitator_id = body.role_fields.facilitator_id;
 				}
+				if (body.role === 'facilitator' && body.hasOwnProperty('dob')) {
+					delete body.dob;
+				}
 				console.log('body 415', body);
 				const result = await this.newCreate(body);
 				console.log('result', result);
