@@ -368,9 +368,41 @@ export class BeneficiariesService {
 				mobile_no_verified
 				password
 				pincode
-				profile_photo_1
-				profile_photo_2
-				profile_photo_3
+				aadhaar_front: documents(where: {document_sub_type: {_eq: "aadhaar_front"}}) {
+					id
+					name
+					doument_type
+					document_sub_type
+					path
+					}
+				aadhaar_back: documents(where: {document_sub_type: {_eq: "aadhaar_back"}}) {
+					id
+					name
+					doument_type
+					document_sub_type
+					path
+					}
+				profile_photo_1: documents(where: {document_sub_type: {_eq: "profile_photo_1"}}) {
+					id
+					name
+					doument_type
+					document_sub_type
+					path
+					}
+					profile_photo_2: documents(where: {document_sub_type: {_eq: "profile_photo_2"}}) {
+					id
+					name
+					doument_type
+					document_sub_type
+					path
+					}
+					profile_photo_3: documents(where: {document_sub_type: {_eq: "profile_photo_3"}}) {
+					id
+					name
+					doument_type
+					document_sub_type
+					path
+					}
 				profile_url
 				state
 				state_id
@@ -500,6 +532,20 @@ export class BeneficiariesService {
 			});
 		} else {
 			result.program_beneficiaries = result?.program_beneficiaries?.[0];
+			//response mapping convert array to object
+			for (const key of [
+				'profile_photo_1',
+				'profile_photo_2',
+				'profile_photo_3',
+				'aadhaar_front',
+				'aadhaar_back',
+			]) {
+				if (result?.[key] && result?.[key][0]) {
+					result[key] = result[key][0];
+				} else {
+					result = { ...result, [key]: {} };
+				}
+			}
 			return resp.status(200).json({
 				success: true,
 				message: 'Benificiaries found successfully!',
@@ -697,6 +743,10 @@ export class BeneficiariesService {
 					'user_id',
 					'career_aspiration',
 					'career_aspiration_details',
+				],
+				program_beneficiaries: [
+					'learning_motivation',
+					'type_of_support_needed',
 				],
 			},
 			edit_enrollement: {
@@ -1074,11 +1124,16 @@ export class BeneficiariesService {
 				const userArr =
 					PAGE_WISE_UPDATE_TABLE_DETAILS.edit_further_studies
 						.core_beneficiaries;
+				const userArr2 =
+					PAGE_WISE_UPDATE_TABLE_DETAILS.edit_further_studies
+						.program_beneficiaries;
 				let tableName = 'core_beneficiaries';
 				await this.hasuraService.q(
 					tableName,
 					{
-						...req,
+						career_aspiration: req?.career_aspiration,
+						career_aspiration_details:
+							req?.career_aspiration_details,
 						id: beneficiaryUser?.core_beneficiaries?.id
 							? beneficiaryUser?.core_beneficiaries?.id
 							: null,
@@ -1087,6 +1142,21 @@ export class BeneficiariesService {
 					userArr,
 					update,
 				);
+				const programDetails = beneficiaryUser.program_beneficiaries;
+				//update further_studies in program_beneficiaries table
+				await this.hasuraService.q(
+					'program_beneficiaries',
+					{
+						learning_motivation:
+							req?.aspiration_mapping.learning_motivation,
+						type_of_support_needed:
+							req?.aspiration_mapping.type_of_support_needed,
+						id: programDetails?.id ? programDetails.id : null,
+					},
+					userArr2,
+					update,
+				);
+
 				break;
 			}
 			case 'edit_enrollement': {
@@ -1101,18 +1171,67 @@ export class BeneficiariesService {
 				// );
 				const programDetails = beneficiaryUser.program_beneficiaries;
 				let tableName = 'program_beneficiaries';
-
+				let myRequest = {};
+				if (req.enrollment_status == 'enrolled') {
+					let messageArray = [];
+					let tempArray = [
+						'enrollment_number',
+						'enrollment_status',
+						'enrolled_for_board',
+						'subjects',
+						'payment_receipt_document_id',
+					];
+					for (let info of tempArray) {
+						if (req[info] === undefined || req[info] === '') {
+							messageArray.push(`please send ${info} `);
+						}
+					}
+					if (messageArray.length > 0) {
+						return response.status(400).send({
+							success: false,
+							message: messageArray,
+							data: {},
+						});
+					} else {
+						myRequest = {
+							...req,
+							subjects: JSON.stringify(req.subjects).replace(
+								/"/g,
+								'\\"',
+							),
+						};
+					}
+				}
+				if (req.enrollment_status == 'not_enrolled') {
+					myRequest['enrollment_status'] = req?.enrollment_status;
+				}
+				if (
+					req.enrollment_status == 'applied_but_pending' ||
+					req.enrollment_status == 'rejected'
+				) {
+					myRequest['enrolled_for_board'] = req?.enrolled_for_board;
+					myRequest['enrollment_status'] = req?.enrollment_status;
+				}
+				if (req.enrollment_status == 'other') {
+					let subject;
+					if (req.subjects) {
+						subject = JSON.stringify(req.subjects).replace(
+							/"/g,
+							'\\"',
+						);
+					}
+					myRequest = {
+						...req,
+						...(req.subjects && { subjects: subject }),
+						enrollment_status: req?.enrollment_status,
+					};
+				}
 				await this.hasuraService.q(
 					tableName,
 					{
-						...req,
+						...myRequest,
 						id: programDetails?.id ? programDetails.id : null,
 						user_id: user_id,
-
-						subjects: JSON.stringify(req.subjects).replace(
-							/"/g,
-							'\\"',
-						),
 					},
 					userArr,
 					update,

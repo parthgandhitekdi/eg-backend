@@ -462,7 +462,81 @@ export class EventsService {
 		}
 	}
 
-	remove(id: number) {
-		return this.hasuraService.delete(this.table, { id: +id });
+	async remove(id: number, header, resp: any) {
+		const userDetail = await this.userService.ipUserInfo(header);
+		const organizationId =
+			userDetail?.data?.program_users[0]?.organisation_id;
+		try {
+			const data = {
+				query: `query MyQuery {
+			    events(where: {id: {_eq: ${id}}}){
+				id
+				user_id
+				name
+				created_by
+				updated_by
+				attendances{
+				id
+				user_id
+				}
+			}
+			}`,
+			};
+
+			const response = await this.hasuraServiceFromServices.getData(data);
+
+			let eventDetails = response?.data?.events[0];
+			//get organization id of event created user
+			const EventUserdata = {
+				query: `query MyQuery {
+				  users_by_pk(id: ${eventDetails?.user_id}){
+				  program_users{
+					organisation_id
+				  }
+				}
+			  }`,
+			};
+			const eventcreatedUserResponse = await this.hasuraServiceFromServices.getData(EventUserdata);
+			const eventUserOrganizationId =eventcreatedUserResponse?.data?.users_by_pk?.program_users[0]?.organisation_id;
+			//if logged user and event created user organization id is same then only perform delete operation
+			if (organizationId == eventUserOrganizationId) {
+				const deletePromise = [];
+				if (
+					eventDetails?.attendances &&
+					eventDetails?.attendances?.length > 0
+				) {
+					for (const iterator of eventDetails?.attendances) {
+						deletePromise.push(
+							this.hasuraService.delete('attendance', {
+								id: +iterator.id,
+							}),
+						);
+					}
+					const removedAttendees = await Promise.all(deletePromise);
+				}
+				const deleteEvent = await this.hasuraService.delete(
+					this.table,
+					{ id: +id },
+				);
+				return resp.status(200).send({
+					success: true,
+					message: 'Event Deleted Successfully',
+					data: { events: deleteEvent?.events },
+				});
+			} else {
+				//if organization not matched
+				return resp.status(401).send({
+					success: true,
+					message: 'Unauthorized To Delete Event',
+					data: {},
+				});
+			}
+		} catch (error) {
+			return resp.status(500).send({
+				success: false,
+				message: error.message,
+				data: {},
+			});
+		}
 	}
 }

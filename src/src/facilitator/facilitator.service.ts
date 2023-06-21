@@ -294,6 +294,67 @@ export class FacilitatorService {
 		}
 	}
 
+	async updateAadhaarDetails(id: number, body: any) {
+		const aadhaar_no = body.aadhar_no;
+
+		if (
+			typeof aadhaar_no !== 'string'
+			|| !aadhaar_no.trim()
+			|| aadhaar_no.length !== 12
+			|| aadhaar_no.startsWith('1')
+			|| aadhaar_no.startsWith('0')
+		) {
+			return {
+				success: false,
+				statusCode: 400,
+				message: 'Invalid Aadhaar number!'
+			};
+		}
+
+		// Check if aadhaar already exists or not
+		let hasuraQuery = `
+			query MyQuery {
+				users_aggregate (
+					where: {
+						_and: [
+							{ id: { _neq: ${id} } },
+							{ aadhar_no: { _eq: "${aadhaar_no}" } }
+						]
+					}
+				) {
+					aggregate {
+						count
+					}
+				}
+			}
+		`;
+
+		const data = {
+			query: hasuraQuery,
+		};
+
+		let hasuraResponse = await this.hasuraService.getData(data);
+
+		const existedUsers = hasuraResponse?.data?.users_aggregate?.aggregate?.count;
+
+		if (existedUsers) {
+			return {
+				success: false,
+				statusCode: 400,
+				message: 'Aadhaar number already exists!'
+			};
+		}
+
+		// Update Users table data
+		const userArr = ['aadhar_no'];
+		const keyExist = userArr.filter((e) => Object.keys(body).includes(e));
+		if (keyExist.length) {
+			const tableName = 'users';
+			body.id = id;
+			await this.hasuraService.q(tableName, body, userArr, true);
+		}
+	}
+
 	async updateContactDetails(id: number, body: any, facilitatorUser: any) {
 		// Update Users table data
 		const userArr = ['mobile', 'alternative_mobile_number', 'email_id'];
@@ -460,7 +521,10 @@ export class FacilitatorService {
 						(data) => data.id == experience_id,
 					)?.reference;
 
-					if (referenceDetails) {
+					if (
+							referenceDetails
+						&& 	referenceDetails.document_id !== body.reference_details?.document_id
+					) {
 						if (referenceDetails?.document_reference?.name) {
 							await this.s3Service.deletePhoto(
 								referenceDetails.document_reference.name,
@@ -500,7 +564,10 @@ export class FacilitatorService {
 			}
 
 			// Update Documents table data
-			if (body?.reference_details?.document_id) {
+			if (
+					(!referenceDetails && body?.reference_details?.document_id)
+				|| 	(body?.reference_details?.document_id && referenceDetails.document_id !== body.reference_details.document_id)
+			) {
 				const documentsArr = ['context', 'context_id'];
 				let tableName = 'documents';
 				await this.hasuraService.q(
@@ -562,7 +629,10 @@ export class FacilitatorService {
 		);
 		let qualificationDetails = facilitatorUser.qualifications;
 
-		if (qualificationDetails.id) {
+		if (
+				qualificationDetails.qualification_reference_document_id
+			&& 	qualificationDetails.qualification_reference_document_id !== body.qualification_reference_document_id
+		) {
 			if (qualificationDetails.document_reference?.name) {
 				await this.s3Service.deletePhoto(
 					qualificationDetails.document_reference.name,
@@ -615,23 +685,28 @@ export class FacilitatorService {
 			);
 		}
 
-		// Update documents table data
-		const documentsArr = ['context', 'context_id'];
-		let tableName = 'documents';
-		await this.hasuraService.q(
-			tableName,
-			{
-				id: body.qualification_reference_document_id ?? null,
-				context: 'qualifications',
-				context_id: qualificationDetails.id
-					? qualificationDetails.id
-					: newCreatedQualificationDetails.id
-					? newCreatedQualificationDetails.id
-					: null,
-			},
-			documentsArr,
-			true,
-		);
+		if (
+				(!qualificationDetails && body?.qualification_reference_document_id)
+			|| 	(body?.qualification_reference_document_id && qualificationDetails.qualification_reference_document_id !== body.qualification_reference_document_id)
+		) {
+			// Update documents table data
+			const documentsArr = ['context', 'context_id'];
+			let tableName = 'documents';
+			await this.hasuraService.q(
+				tableName,
+				{
+					id: body.qualification_reference_document_id ?? null,
+					context: 'qualifications',
+					context_id: qualificationDetails.id
+						? qualificationDetails.id
+						: newCreatedQualificationDetails.id
+						? newCreatedQualificationDetails.id
+						: null,
+				},
+				documentsArr,
+				true,
+			);
+		}
 	}
 
 	async updateReferenceDetails(id: number, body: any, facilitatorUser: any) {
@@ -746,6 +821,16 @@ export class FacilitatorService {
 						userArr,
 						true,
 					);
+				}
+				break;
+			}
+			case 'aadhaar_details': {
+				const result = await this.updateAadhaarDetails(id, body);
+				if (result && !result.success) {
+					return response.status(result.statusCode).json({
+						success: result.success,
+						message: result.message,
+					});
 				}
 				break;
 			}
@@ -878,6 +963,7 @@ export class FacilitatorService {
 						last_name
 						district
 						mobile
+						block
 						gender
 						district
 					    program_faciltators{
@@ -893,6 +979,7 @@ export class FacilitatorService {
 				header: [
 					{ id: 'name', title: 'Name' },
 					{ id: 'district', title: 'District' },
+					{ id: 'block', title: 'Block' },
 					{ id: 'mobile', title: 'Mobile Number' },
 					{ id: 'status', title: 'Status' },
 					{ id: 'gender', title: 'Gender' },
@@ -904,6 +991,7 @@ export class FacilitatorService {
 				const dataObject = {};
 				dataObject['name'] = data?.first_name + ' ' + data?.last_name;
 				dataObject['district'] = data?.district;
+				dataObject['block'] = data?.block;
 				dataObject['mobile'] = data?.mobile;
 				dataObject['status'] = data?.program_faciltators[0]?.status;
 				dataObject['gender'] = data?.gender;

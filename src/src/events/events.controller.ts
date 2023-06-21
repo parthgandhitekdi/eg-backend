@@ -98,7 +98,8 @@ export class EventsController {
 	}
 
 	@Delete(':id')
-	remove(@Param('id') id: string) {
-		return this.eventsService.remove(+id);
+	@UseGuards(new AuthGuard())
+	remove(@Param('id') id: string,@Req() header: Request,@Res() response: Response) {
+		return this.eventsService.remove(+id,header,response);
 	}
 }
