@@ -147,4 +147,13 @@ export class UserController {
   ) {
     return this.userService.register(body, request);
   }
+
+  @Get('/aadhaarDetails/:userId')
+	@UseGuards(new AuthGuard())
+	private async getAadhaarDetails(
+		@Param('userId') id: string,
+		@Res() response: Response,
+	) {
+		return this.userService.getAadhaarDetails(id,response);
+	}
 }

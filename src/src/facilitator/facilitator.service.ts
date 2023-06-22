@@ -283,14 +283,70 @@ export class FacilitatorService {
 		});
 	}
 
+	async updateAddBasicDetails(id: number, body: any) {
+		// Update Users table data
+		const userArr = ['dob', 'gender'];
+		const keyExist = userArr.filter((e) => Object.keys(body).includes(e));
+		if (keyExist.length) {
+			const tableName = 'users';
+			body.id = id;
+			await this.hasuraService.q(tableName, body, userArr, true);
+		}
+	}
+
+	async updateAddOtherDetails(id: number, body: any, facilitatorUser: any) {
+		// Update Program facilitators table data
+		const programFacilitatorArr = ['availability'];
+		let keyExist = programFacilitatorArr.filter((e) =>
+			Object.keys(body).includes(e),
+		);
+		if (keyExist.length) {
+			const tableName = 'program_faciltators';
+			const programDetails = facilitatorUser.program_faciltators;
+			await this.hasuraService.q(
+				tableName,
+				{
+					...body,
+					id: programDetails?.id ?? null,
+				},
+				programFacilitatorArr,
+				true,
+			);
+		}
+
+		// Update core_facilitators table data
+		const coreFacilitatorsArr = [
+			'user_id',
+			'device_ownership',
+			'device_type',
+			'refreere'
+		];
+		keyExist = coreFacilitatorsArr.filter((e) =>
+			Object.keys(body).includes(e),
+		);
+		if (keyExist.length) {
+			const tableName = 'core_faciltators';
+			await this.hasuraService.q(
+				tableName,
+				{
+					...body,
+					id: facilitatorUser?.core_faciltator?.id ?? null,
+					user_id: id,
+				},
+				coreFacilitatorsArr,
+				true,
+			);
+		}
+	}
+
 	async updateBasicDetails(id: number, body: any) {
 		// Update Users table data
 		const userArr = ['first_name', 'last_name', 'middle_name', 'dob'];
 		const keyExist = userArr.filter((e) => Object.keys(body).includes(e));
 		if (keyExist.length) {
 			const tableName = 'users';
-			body.id = id;
-			await this.hasuraService.q(tableName, body, userArr, true);
+			const newReq = { ...body,id:id, ...(body?.dob == '' && { dob: null }) };
+			await this.hasuraService.q(tableName, newReq, userArr, true);
 		}
 	}
 
@@ -752,6 +808,14 @@ export class FacilitatorService {
 	async update(id: number, body: any, response: any) {
 		const { data: facilitatorUser } = await this.userById(id);
 		switch (body.page_type) {
+			case 'add_basic_details': {
+				await this.updateAddBasicDetails(id, body);
+				break;
+			}
+			case 'add_other_details': {
+				await this.updateAddOtherDetails(id, body, facilitatorUser);
+				break;
+			}
 			case 'basic_details': {
 				await this.updateBasicDetails(id, body);
 				break;

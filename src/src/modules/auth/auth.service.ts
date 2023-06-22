@@ -698,12 +698,14 @@ export class AuthService {
 			programRoleTableName = 'program_beneficiaries';
 			groupId = 'facilitator_id';
 			req.facilitator_id = req.role_fields.facilitator_id;
+			req.status = 'enrolled';
 		}
 
 		if (req.role === 'facilitator' || req.role === 'facilitators') {
 			programRoleTableName = 'program_faciltators';
 			groupId = 'parent_ip';
 			req.parent_ip = req.role_fields.parent_ip;
+			req.status = 'applied';
 		}
 		console.log('tableName', programRoleTableName);
 		console.log('groupId', groupId);
@@ -717,7 +719,7 @@ export class AuthService {
 					program_id: 1,
 					academic_year_id: 1,
 				},
-				[`${groupId}`, 'user_id', 'program_id', 'academic_year_id'],
+				[`${groupId}`, 'user_id', 'program_id', 'academic_year_id', 'status'],
 			);
 		}
 

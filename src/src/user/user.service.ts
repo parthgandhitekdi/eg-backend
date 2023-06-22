@@ -10,10 +10,12 @@ import jwt_decode from 'jwt-decode';
 import { lastValueFrom, map } from 'rxjs';
 import { HasuraService } from '../hasura/hasura.service';
 import { UserHelperService } from '../helper/userHelper.service';
+import { HasuraService as HasuraServiceFromServices } from '../services/hasura/hasura.service';
 @Injectable()
 export class UserService {
 	public url = process.env.HASURA_BASE_URL;
 	constructor(
+		private hasuraServiceFromServices: HasuraServiceFromServices,
 		private readonly httpService: HttpService,
 		private helper: UserHelperService,
 		private hasuraService: HasuraService,
@@ -457,6 +459,58 @@ export class UserService {
 			message: 'Ok.',
 			data: mappedResponse,
 		};
+	}
+	async getAadhaarDetails(id: any, resp: any) {
+		var data = {
+			query: `query searchById {
+		  users_by_pk(id: ${id}) {
+		  id
+			aadhaar_verification_mode
+			aadhar_no
+			aadhar_token
+			aadhar_verified
+		  aadhaar_front: documents(where: {document_sub_type: {_eq: "aadhaar_front"}}) {
+						id
+						name
+						doument_type
+						document_sub_type
+						path
+						}
+			aadhaar_back: documents(where: {document_sub_type: {_eq: "aadhaar_back"}}) {
+						id
+						name
+						doument_type
+						document_sub_type
+						path
+						}
+	  }
+	}`,
+		};
+		const response = await this.hasuraServiceFromServices.getData(data);
+		let result = response?.data?.users_by_pk;
+		if (!result) {
+			return resp.status(404).send({
+				success: false,
+				status: 'Not Found',
+				message: 'Aadhaar Details Not Found',
+				data: {},
+			});
+		} else {
+			result.program_beneficiaries = result?.program_beneficiaries?.[0];
+			//response mapping convert array to object
+			for (const key of ['aadhaar_front', 'aadhaar_back']) {
+				if (result?.[key] && result?.[key][0]) {
+					result[key] = result[key][0];
+				} else {
+					result = { ...result, [key]: {} };
+				}
+			}
+			return resp.status(200).json({
+				success: true,
+				message: 'Aadhaar Details found successfully!',
+				data: { result: result },
+			});
+		}
 	}
 
 	async userById(id: any, resp?: any) {

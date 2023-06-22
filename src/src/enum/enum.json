@@ -166,6 +166,10 @@
 		},
 		{ "title": "FACILITATOR_MARITAL_STATUS_OTHER", "value": "other" }
 	],
+	"FACILITATOR_AVAILABILITY": [
+		{ "title": "FACILITATOR_PART_TIME", "value": "part_time" },
+		{ "title": "FACILITATOR_FULL_TIME", "value": "full_time" }
+	],
 	"FACILITATOR_REASONS_FOR_QUIT": [
 		{
 			"title": "FACILITATOR_REASONS_FOR_QUIT_GOT_ANOTHER_JOB",

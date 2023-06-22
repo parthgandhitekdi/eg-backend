@@ -112,7 +112,17 @@ export class BeneficiariesService {
 		}
 		let query = '';
 		if (status && status !== '') {
-			query = `{program_beneficiaries:{status:{_eq:${status}}}}`;
+			if (status === 'identified') {
+				query = `{
+					_or: [
+						{ program_beneficiaries: { status: { _eq: "identified" } } },
+						{ program_beneficiaries: { status: { _is_null: true } } },
+						{ program_beneficiaries: { status: { _eq: "" } } },
+					]
+				}`;
+			} else {
+				query = `{program_beneficiaries:{status:{_eq:${status}}}}`;
+			}
 		}
 		let search = '';
 
@@ -790,7 +800,8 @@ export class BeneficiariesService {
 				// Update Users table data
 				const userArr = PAGE_WISE_UPDATE_TABLE_DETAILS.edit_basic.users;
 				const tableName = 'users';
-				await this.hasuraService.q(tableName, req, userArr, update);
+				const newReq = { ...req, ...(req?.dob == '' && { dob: null }) };
+				await this.hasuraService.q(tableName, newReq, userArr, update);
 				break;
 			}
 

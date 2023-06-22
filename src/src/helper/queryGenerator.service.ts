@@ -107,18 +107,26 @@ export class QueryGeneratorService {
       }
       let strArr = [];
       keys.forEach((e, index) => {
-        if (e !== 'id' && (onlyFields.length < 1 || onlyFields.includes(e))) {
-          if (type === 'obj') {
-            if (['mobile', 'alternative_mobile_number'].includes(e)) {
-              strArr = [...strArr, `${e}:${item[e]}`];
-            } else {
-              strArr = [...strArr, `${e}:"${item[e]}"`];
-            }
-          } else {
-            strArr = [...strArr, `${e}:String`];
-          }
-        }
-      });
+			if (
+				e !== 'id' &&
+				(onlyFields.length < 1 || onlyFields.includes(e))
+			) {
+				if (type === 'obj') {
+					if (
+						typeof item[e] !== 'string' &&
+						['mobile', 'alternative_mobile_number', 'dob'].includes(
+							e,
+						)
+					) {
+						strArr = [...strArr, `${e}:${item[e]}`];
+					} else {
+						strArr = [...strArr, `${e}:"${item[e]}"`];
+					}
+				} else {
+					strArr = [...strArr, `${e}:String`];
+				}
+			}
+		});
       str += strArr.join();
       str += `}`;
       return str;
