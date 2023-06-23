@@ -230,6 +230,44 @@
 			"value": "act_of_misconduct_misbehaviour"
 		}
 	],
+	"FACILITATOR_REFERENCE_DESIGNATION": [
+		{
+			"title": "FACILITATOR_REFERENCE_DESIGNATION_ANGANWADI_WORKER",
+			"value": "anganwadi_worker"
+		},
+		{
+			"title": "FACILITATOR_REFERENCE_DESIGNATION_ASHA_SAHYOGINI",
+			"value": "asha_sahyogini"
+		},
+		{
+			"title": "FACILITATOR_REFERENCE_DESIGNATION_TEACHER",
+			"value": "teacher"
+		},
+		{
+			"title": "FACILITATOR_REFERENCE_DESIGNATION_DIGNITARIES",
+			"value": "dignitaries"
+		},
+		{
+			"title": "FACILITATOR_REFERENCE_DESIGNATIONE_SATHIN",
+			"value": "sathin"
+		},
+		{
+			"title": "FACILITATOR_REFERENCE_DESIGNATIONE_FATHER_OR_MOTHER_OF_LEARNER",
+			"value": "father_or_mother_of_learner"
+		},
+		{
+			"title": "FACILITATOR_REFERENCE_DESIGNATIONE_PRI",
+			"value": "pri"
+		},
+		{
+			"title": "FACILITATOR_REFERENCE_DESIGNATIONE_ANM",
+			"value": "anm"
+		},
+		{
+			"title": "FACILITATOR_REFERENCE_DESIGNATIONE_OTHERS",
+			"value": "others"
+		}
+	],
 	"REASON_OF_LEAVING_EDUCATION": [
 		{
 			"title": "NA",
