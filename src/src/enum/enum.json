@@ -148,27 +148,32 @@
 		{ "title": "FACILITATOR_SOCIAL_STATUS_OPEN", "value": "open" },
 		{ "title": "FACILITATOR_SOCIAL_STATUS_OTHER", "value": "other" }
 	],
-	"BENEFICIARY_MARITAL_STATUS": [
-		{ "title": "BENEFICIARY_MARITAL_STATUS_MARRIED", "value": "married" },
+	"MARITAL_STATUS": [
+		{ "title": "MARITAL_STATUS_MARRIED", "value": "married" },
 		{
-			"title": "BENEFICIARY_MARITAL_STATUS_UNMARRIED",
+			"title": "MARITAL_STATUS_UNMARRIED",
 			"value": "unmarried"
 		},
-		{ "title": "BENEFICIARY_MARITAL_STATUS_SINGLE", "value": "single" }
+		{ "title": "MARITAL_STATUS_SINGLE", "value": "single" }
 	],
-	"FACILITATOR_MARITAL_STATUS": [
-		{ "title": "FACILITATOR_MARITAL_STATUS_SINGLE", "value": "single" },
-		{ "title": "FACILITATOR_MARITAL_STATUS_MARRIED", "value": "married" },
-		{ "title": "FACILITATOR_MARITAL_STATUS_DIVORCED", "value": "divorced" },
-		{
-			"title": "FACILITATOR_MARITAL_STATUS_SEPARATED",
-			"value": "separated"
-		},
-		{ "title": "FACILITATOR_MARITAL_STATUS_OTHER", "value": "other" }
-	],
+
 	"FACILITATOR_AVAILABILITY": [
 		{ "title": "FACILITATOR_PART_TIME", "value": "part_time" },
 		{ "title": "FACILITATOR_FULL_TIME", "value": "full_time" }
+	],
+	"FACILITATOR_EVENT_TYPE": [
+		{
+			"title": "FACILITATOR_EVENT_TYPE_PRERAK_ORIENTATION",
+			"value": "prerak_orientation"
+		},
+		{
+			"title": "FACILITATOR_EVENT_TYPE_PRERAK_FLN_TRAINING",
+			"value": "prerak_fln_training"
+		},
+		{
+			"title": "FACILITATOR_EVENT_TYPE_PRERAK_CAMP_EXECUTION_TRAINING",
+			"value": "prerak_camp_execution_training"
+		}
 	],
 	"FACILITATOR_REASONS_FOR_QUIT": [
 		{
@@ -265,6 +270,44 @@
 		},
 		{
 			"title": "FACILITATOR_REFERENCE_DESIGNATIONE_OTHERS",
+			"value": "others"
+		}
+	],
+	"FACILITATOR_REASONS_FOR_REJECTED": [
+		{
+			"title": "FACILITATOR_REASONS_FOR_REJECTED_LACK_OF_REQUIRED_QUALIFICATIONS",
+			"value": "lack_of_required_qualifications"
+		},
+		{
+			"title": "FACILITATOR_REASONS_FOR_REJECTED_INSUFFICIENT_EXPERIENCE",
+			"value": "insufficient_experience"
+		},
+		{
+			"title": "FACILITATOR_REASONS_FOR_REJECTED_DUE_TO_POOR_REFERENCES_OR_RECOMMENDATIONS",
+			"value": "due_to_poor_references_or_recommendations"
+		},
+		{
+			"title": "FACILITATOR_REASONS_FOR_REJECTED_INADEQUATE_INTERVIEW_PERFORMANCE",
+			"value": "inadequate_interview_performance"
+		},
+		{
+			"title": "FACILITATOR_REASONS_FOR_REJECTED_MISMATCH_WITH_ORGANISATION_VALUES_OR_CULTURE",
+			"value": "mismatch_with_organisation_values_or_culture"
+		},
+		{
+			"title": "FACILITATOR_REASONS_FOR_REJECTED_CRIMINAL_RECORD_OR_MISCONDUCT",
+			"value": "criminal_record_or_misconduct"
+		},
+		{
+			"title": "FACILITATOR_REASONS_FOR_REJECTED_LIMITED_AVAILABILITY",
+			"value": "limited_availability"
+		},
+		{
+			"title": "FACILITATOR_REASONS_FOR_REJECTED_OVERSATURATION_OF_APPLICANTS",
+			"value": "oversaturation_of_applicants"
+		},
+		{
+			"title": "FACILITATOR_REASONS_FOR_REJECTED_OTHERS",
 			"value": "others"
 		}
 	],

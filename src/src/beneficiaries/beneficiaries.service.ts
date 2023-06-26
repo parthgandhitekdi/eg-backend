@@ -6,6 +6,7 @@ import {
 	Injectable,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { S3Service } from 'src/services/s3/s3.service';
 import { UserService } from 'src/user/user.service';
 import { HasuraService } from '../hasura/hasura.service';
 import { UserHelperService } from '../helper/userHelper.service';
@@ -16,6 +17,7 @@ export class BeneficiariesService {
 	public url = process.env.HASURA_BASE_URL;
 
 	constructor(
+		private readonly s3Service: S3Service,
 		private readonly httpService: HttpService,
 		private userService: UserService,
 		private helper: UserHelperService,
@@ -762,7 +764,6 @@ export class BeneficiariesService {
 			edit_enrollement: {
 				program_beneficiaries: [
 					'enrollment_number',
-					'user_id',
 					'enrollment_status',
 					'enrolled_for_board',
 					'type_of_enrollement',
@@ -1215,6 +1216,39 @@ export class BeneficiariesService {
 				}
 				if (req.enrollment_status == 'not_enrolled') {
 					myRequest['enrollment_status'] = req?.enrollment_status;
+					myRequest['enrollment_number'] = null;
+					myRequest['enrolled_for_board'] = null;
+					myRequest['subjects'] = null;
+					myRequest['payment_receipt_document_id'] = null;
+					const data = {
+						query: `query searchById {
+							users_by_pk(id: ${req.id}) {
+								id
+								program_beneficiaries{
+									payment_receipt_document_id
+									document {
+										id
+										name
+								  }
+							  }
+							}
+				    }`,
+					};
+					const response =
+						await this.hasuraServiceFromServices.getData(data);
+					const documentDetails =
+						response?.data?.users_by_pk?.program_beneficiaries[0]
+							?.document;
+					if (documentDetails?.id) {
+						//delete document from documnet table
+						await this.hasuraService.delete('documents', {
+							id: documentDetails?.id,
+						});
+					}
+					if (documentDetails?.name) {
+						//delete document from s3 bucket
+						await this.s3Service.deletePhoto(documentDetails?.name);
+					}
 				}
 				if (
 					req.enrollment_status == 'applied_but_pending' ||
@@ -1242,7 +1276,6 @@ export class BeneficiariesService {
 					{
 						...myRequest,
 						id: programDetails?.id ? programDetails.id : null,
-						user_id: user_id,
 					},
 					userArr,
 					update,
