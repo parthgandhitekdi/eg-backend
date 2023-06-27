@@ -1,12 +1,7 @@
-import {
-    Controller,
-    Get,
-    Query,
-    Res,
-    UseInterceptors
-} from '@nestjs/common';
+import { Controller, Get, Query, Res, UseInterceptors } from '@nestjs/common';
 import { SentryInterceptor } from 'src/common/interceptors/sentry.interceptor';
 import { EnumService } from './enum.service';
+import { Response } from 'express';
 
 @UseInterceptors(SentryInterceptor)
 @Controller('enum')

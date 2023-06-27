@@ -263,6 +263,12 @@ export class BeneficiariesService {
                         facilitator_id
                         created_by
                         beneficiaries_found_at
+						enrollment_date,
+						enrollment_first_name,
+						enrollment_middle_name,
+						enrollment_last_name,
+						enrollment_dob,
+						enrollment_aadhaar_no,
 						document {
 							context
 							context_id
@@ -351,6 +357,12 @@ export class BeneficiariesService {
 							e?.['program_faciltators']?.[0],
 						['program_beneficiaries']:
 							e?.['program_beneficiaries']?.[0],
+						['profile_photo_1']:
+							e?.['profile_photo_1']?.[0] || {},
+						['profile_photo_2']:
+							e?.['profile_photo_2']?.[0] || {},
+						['profile_photo_3']:
+							e?.['profile_photo_3']?.[0] || {},
 					})),
 					limit,
 					currentPage: page,
@@ -472,6 +484,12 @@ export class BeneficiariesService {
                 facilitator_id
                 created_by
                 beneficiaries_found_at
+				enrollment_date,
+				enrollment_first_name,
+				enrollment_middle_name,
+				enrollment_last_name,
+				enrollment_dob,
+				enrollment_aadhaar_no,
 				document {
 					context
 					context_id
@@ -800,7 +818,6 @@ export class BeneficiariesService {
 			},
 			edit_enrollement_details: {
 				program_beneficiaries: [
-					'enrollment_date',
 					'enrollment_first_name',
 					'enrollment_middle_name',
 					'enrollment_last_name',
@@ -1264,6 +1281,7 @@ export class BeneficiariesService {
 						'enrollment_status',
 						'enrolled_for_board',
 						'subjects',
+						'enrollment_date',
 						'payment_receipt_document_id',
 					];
 					for (let info of tempArray) {
@@ -1378,7 +1396,6 @@ export class BeneficiariesService {
 				if (req.enrollment_status == 'enrolled') {
 					let messageArray = [];
 					let tempArray = [
-						'enrollment_date',
 						'enrollment_first_name',
 						'enrollment_middle_name',
 						'enrollment_last_name',
