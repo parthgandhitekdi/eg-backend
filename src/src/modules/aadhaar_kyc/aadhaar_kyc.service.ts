@@ -188,4 +188,64 @@ export class AadhaarKycService {
 			});
 		}
 	}
+	
+	public async okyc2AadhaarVerify(body, req, resp) {
+		const url = `${process.env.AADHAAR_OKYC2_API_URL}`;
+		const data = { ...body };
+		try {
+			const result = await this.httpService
+				.post(url, data, this.commonRequestConfig)
+				.toPromise();
+
+			return resp.status(200).json({
+				success: true,
+				message: 'OKYC Request Successfully Verified!',
+				data: result.data,
+			});
+		} catch ({ response, message }) {
+			console.log('Error in completing OKYC', message);
+
+			return resp.status(response?.status ? response?.status : 500).send({
+				success: false,
+				message: response?.data?.error?.detail
+					? response?.data?.error?.detail
+					: message,
+
+				data: {
+					code: response?.data?.error?.code
+						? response?.data?.error?.code
+						: 500,
+				},
+			});
+		}
+	}
+	public async getOkyc2AadhaarVerificationStatus(id, req, resp) {
+		const url = `${process.env.AADHAAR_OKYC2_API_URL}/${id}`;
+		console.log("url",url)
+		try {
+			const result = await this.httpService
+				.get(url, this.commonRequestConfig)
+				.toPromise();
+
+			return resp.status(200).json({
+				success: true,
+				message: 'Got OKYC Verified Successfully!',
+				data: result.data,
+			});
+		} catch ({ response, message }) {
+			console.log('Error in getting OKYC status', message);
+
+			return resp.status(response?.status ? response?.status : 500).send({
+				success: false,
+				message: response?.data?.error?.detail
+					? response?.data?.error?.detail
+					: message,
+				code: response?.data?.error?.code
+					? response?.data?.error?.code
+					: 500,
+
+				data: {},
+			});
+		}
+	}
 }

@@ -19,7 +19,7 @@ export class UploadFileService {
 		document_sub_type: string,
 		response: Response,
 	) {
-		if (!file) {
+		if (!file?.originalname) {
 			return response.status(400).send({
 				success: false,
 				status: 'Not Found',
@@ -27,7 +27,7 @@ export class UploadFileService {
 				data: {},
 			});
 		}
-		const originalName = file.originalname
+		const originalName = file?.originalname
 			.split(' ')
 			.join('')
 			.toLowerCase();
@@ -208,9 +208,8 @@ export class UploadFileService {
 
 		const hasuraResponse = await this.hasuraService.getData(hasuraData);
 
-		const documentData = hasuraResponse?.data?.documents_by_pk;
-
-		if (documentData === null || !documentData.name) {
+		const documentData:any = hasuraResponse?.data?.documents_by_pk;
+		if (!documentData?.name) {
 			return response.status(400).send({
 				success: false,
 				message: 'Document not exists!',

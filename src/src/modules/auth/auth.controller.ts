@@ -174,4 +174,32 @@ export class AuthController {
 	) {
 		return this.authService.verifyAadhaarKyc({ ...req, id: id }, response);
 	}
+
+	@Post('api/okyc2/aadhaar/verify')
+	@UseGuards(new AuthGuard())
+	private async okyc2AadhaarVerify(
+		@Body() body:any,
+		@Req() request: any,
+		@Res() response: Response,
+	) {
+		return this.authService.okyc2AadhaarVerify(
+			body,
+			request,
+			response,
+		);
+	}
+
+	@Get('api/okyc2/aadhaar/verify/:id')
+	@UseGuards(new AuthGuard())
+	private async getOkyc2AadhaarVerificationStatus(
+		@Param('id') id: string,
+		@Req() request: any,
+		@Res() response: Response,
+	) {
+		return this.authService.getOkyc2AadhaarVerificationStatus(
+			id,
+			request,
+			response,
+		);
+	}
 }

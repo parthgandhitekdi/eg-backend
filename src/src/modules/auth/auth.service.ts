@@ -221,11 +221,11 @@ export class AuthService {
                 }
               }`,
 		};
-		const userRes = await this.hasuraService.postData(query);
+		const userRes:any = await this.hasuraService.postData(query);
 		console.log('userRes', userRes);
 
-		if (userRes.data.users.length > 0) {
-			const mobile = userRes.data.users[0].mobile;
+		if (userRes?.data?.users?.length > 0) {
+			const mobile = userRes?.data?.users[0]?.mobile;
 
 			if (mobile) {
 				const sendOtpRes = await this.generateAndSendOtp(
@@ -435,7 +435,21 @@ export class AuthService {
 			response,
 		);
 	}
+	public async okyc2AadhaarVerify(body, request, response) {
+		return await this.aadhaarKycService.okyc2AadhaarVerify(
+			body,
+			request,
+			response,
+		);
+	}
 
+	public async getOkyc2AadhaarVerificationStatus(id, request, response) {
+		return await this.aadhaarKycService.getOkyc2AadhaarVerificationStatus(
+			id,
+			request,
+			response,
+		);
+	}
 	public async register(body, response) {
 		console.log('body', body);
 

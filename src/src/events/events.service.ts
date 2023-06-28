@@ -137,11 +137,18 @@ export class EventsService {
 	}
 
 	public async getEventsList(req, header, response) {
-		const userDetail = await this.userService.ipUserInfo(header);
-		console.log('user details', userDetail.data.id);
+		const userDetail:any = await this.userService.ipUserInfo(header);
+		console.log('user details', userDetail?.data?.id);
+		if(!userDetail?.data?.id){
+			return response.status(400).send({
+				success: false,
+				message: 'Invalid User',
+				data: {},
+			});
+		}
 		let getQuery = {
 			query: `query MyQuery {
-		events(where: {created_by: {_eq: ${userDetail.data.id}}}) {
+		events(where: {created_by: {_eq: ${userDetail?.data?.id}}}) {
 		  id
 		  location
 		  location_type
@@ -184,7 +191,7 @@ export class EventsService {
 	  }`,
 		};
 		const eventsList = await this.hasuraService.postData(getQuery);
-		if (eventsList.data.events.length > 0) {
+		if (eventsList?.data?.events?.length > 0) {
 			return response.status(200).send({
 				success: true,
 				message: 'Events fetched successfully!',

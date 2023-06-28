@@ -75,8 +75,8 @@ export class FacilitatorController {
 
 	@Post('/')
 	@UsePipes(ValidationPipe)
-	async getFacilitators(@Req() req: any, @Body() body: FilterFacilitatorDto) {
-		return this.facilitatorService.getFacilitators(req, body);
+	async getFacilitators(@Req() req: any, @Body() body: FilterFacilitatorDto,@Res() response: any) {
+		return this.facilitatorService.getFacilitators(req, body,response);
 	}
 
 	

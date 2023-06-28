@@ -1031,10 +1031,10 @@ export class UserService {
 
 		// Calling hasura common method find all
 		const data_exist = await this.hasuraService.findAll(tableName, req);
-		let response = data_exist.data.users;
+		let response = data_exist?.data?.users;
 
 		// Check wheather user is exist or not based on response
-		if (response.length > 0) {
+		if (response && response.length > 0) {
 			return {
 				status: 422,
 				message: 'User exist',
@@ -1042,7 +1042,7 @@ export class UserService {
 			};
 		} else {
 			return {
-				status: 200,
+				status: 400,
 				message: 'User not exist',
 				isUserExist: false,
 			};

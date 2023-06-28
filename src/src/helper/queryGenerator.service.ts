@@ -3,7 +3,7 @@ import { Injectable } from '@nestjs/common';
 @Injectable()
 export class QueryGeneratorService {
 	isEmptyObject = (obj: any) =>
-		obj.constructor.name === 'Object' && Object.keys(obj).length > 0;
+		obj && obj.constructor.name === 'Object' && Object.keys(obj).length > 0;
 
 	objectConvert = (obj: any, fun: any) => {
 		if (this.isEmptyObject(obj)) {
@@ -138,6 +138,7 @@ export class QueryGeneratorService {
 								'enrollment_middle_name',
 								'enrollment_last_name',
 								'enrollment_aadhaar_no',
+								'is_eligible',
 							].includes(e)
 						) {
 							strArr = [...strArr, `${e}:${item[e]}`];

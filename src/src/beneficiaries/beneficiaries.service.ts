@@ -263,12 +263,13 @@ export class BeneficiariesService {
                         facilitator_id
                         created_by
                         beneficiaries_found_at
-						enrollment_date,
-						enrollment_first_name,
-						enrollment_middle_name,
-						enrollment_last_name,
-						enrollment_dob,
-						enrollment_aadhaar_no,
+						enrollment_date
+						enrollment_first_name
+						enrollment_middle_name
+						enrollment_last_name
+						enrollment_dob
+						enrollment_aadhaar_no
+						is_eligible
 						document {
 							context
 							context_id
@@ -357,12 +358,9 @@ export class BeneficiariesService {
 							e?.['program_faciltators']?.[0],
 						['program_beneficiaries']:
 							e?.['program_beneficiaries']?.[0],
-						['profile_photo_1']:
-							e?.['profile_photo_1']?.[0] || {},
-						['profile_photo_2']:
-							e?.['profile_photo_2']?.[0] || {},
-						['profile_photo_3']:
-							e?.['profile_photo_3']?.[0] || {},
+						['profile_photo_1']: e?.['profile_photo_1']?.[0] || {},
+						['profile_photo_2']: e?.['profile_photo_2']?.[0] || {},
+						['profile_photo_3']: e?.['profile_photo_3']?.[0] || {},
 					})),
 					limit,
 					currentPage: page,
@@ -484,12 +482,13 @@ export class BeneficiariesService {
                 facilitator_id
                 created_by
                 beneficiaries_found_at
-				enrollment_date,
-				enrollment_first_name,
-				enrollment_middle_name,
-				enrollment_last_name,
-				enrollment_dob,
-				enrollment_aadhaar_no,
+				enrollment_date
+				enrollment_first_name
+				enrollment_middle_name
+				enrollment_last_name
+				enrollment_dob
+				enrollment_aadhaar_no
+				is_eligible
 				document {
 					context
 					context_id
@@ -675,7 +674,7 @@ export class BeneficiariesService {
 	async create(req: any, request, response, update = false) {
 		const user = await this.userService.ipUserInfo(request);
 		const { data: beneficiaryUser } = await this.userById(req.id);
-		if (beneficiaryUser === null) {
+		if (!beneficiaryUser) {
 			return response.status(400).json({
 				success: false,
 				message: 'Invalid user_id!',
@@ -814,6 +813,7 @@ export class BeneficiariesService {
 					'enrollment_last_name',
 					'enrollment_dob',
 					'enrollment_aadhaar_no',
+					'is_eligible',
 				],
 			},
 			edit_enrollement_details: {
@@ -823,6 +823,7 @@ export class BeneficiariesService {
 					'enrollment_last_name',
 					'enrollment_dob',
 					'enrollment_aadhaar_no',
+					'is_eligible',
 				],
 			},
 			//update document status
@@ -1088,7 +1089,7 @@ export class BeneficiariesService {
 				userArr =
 					PAGE_WISE_UPDATE_TABLE_DETAILS.add_education
 						.program_beneficiaries;
-				const programDetails = beneficiaryUser.program_beneficiaries;
+				const programDetails = beneficiaryUser?.program_beneficiaries;
 				tableName = 'program_beneficiaries';
 
 				await this.hasuraService.q(
@@ -1216,6 +1217,11 @@ export class BeneficiariesService {
 				const userArr2 =
 					PAGE_WISE_UPDATE_TABLE_DETAILS.edit_further_studies
 						.program_beneficiaries;
+				const convertToJsonStr = (arr) =>
+					arr.length
+						? JSON.stringify(arr).replace(/"/g, '\\"')
+						: null;
+				req.career_aspiration = convertToJsonStr(req.career_aspiration);
 				let tableName = 'core_beneficiaries';
 				await this.hasuraService.q(
 					tableName,
@@ -1233,18 +1239,13 @@ export class BeneficiariesService {
 				);
 				const programDetails = beneficiaryUser.program_beneficiaries;
 				//update further_studies in program_beneficiaries table
-				req.aspiration_mapping.learning_motivation = req
-					.aspiration_mapping.learning_motivation.length
-					? JSON.stringify(
-							req.aspiration_mapping.learning_motivation,
-					  ).replace(/"/g, '\\"')
-					: null;
-				req.aspiration_mapping.type_of_support_needed = req
-					.aspiration_mapping.type_of_support_needed.length
-					? JSON.stringify(
-							req.aspiration_mapping.type_of_support_needed,
-					  ).replace(/"/g, '\\"')
-					: null;
+				req.aspiration_mapping.learning_motivation = convertToJsonStr(
+					req.aspiration_mapping.learning_motivation,
+				);
+				req.aspiration_mapping.type_of_support_needed =
+					convertToJsonStr(
+						req.aspiration_mapping.type_of_support_needed,
+					);
 
 				await this.hasuraService.q(
 					'program_beneficiaries',
@@ -1317,6 +1318,7 @@ export class BeneficiariesService {
 					myRequest['enrollment_last_name'] = null;
 					myRequest['enrollment_dob'] = null;
 					myRequest['enrollment_aadhaar_no'] = null;
+					myRequest['is_eligible'] = null;
 					const data = {
 						query: `query searchById {
 							users_by_pk(id: ${req.id}) {
@@ -1397,10 +1399,9 @@ export class BeneficiariesService {
 					let messageArray = [];
 					let tempArray = [
 						'enrollment_first_name',
-						'enrollment_middle_name',
-						'enrollment_last_name',
 						'enrollment_dob',
 						'enrollment_aadhaar_no',
+						'is_eligible',
 					];
 					for (let info of tempArray) {
 						if (req[info] === undefined || req[info] === '') {
@@ -1416,6 +1417,12 @@ export class BeneficiariesService {
 					} else {
 						myRequest = {
 							...req,
+							...(req?.enrollment_middle_name == '' && {
+								enrollment_middle_name: null,
+							}),
+							...(req?.enrollment_last_name == '' && {
+								enrollment_last_name: null,
+							}),
 						};
 					}
 				}
@@ -1581,12 +1588,13 @@ export class BeneficiariesService {
             learning_motivation
             type_of_support_needed
 			learning_level
-			enrollment_date,
-			enrollment_first_name,
-			enrollment_middle_name,
-			enrollment_last_name,
-			enrollment_dob,
-			enrollment_aadhaar_no,
+			enrollment_date
+			enrollment_first_name
+			enrollment_middle_name
+			enrollment_last_name
+			enrollment_dob
+			enrollment_aadhaar_no
+			is_eligible
 			document {
 				context
 				context_id

@@ -1078,8 +1078,15 @@ export class FacilitatorService {
 		}
 	}
 
-	async getFacilitators(req: any, body: any) {
-		const user = await this.userService.ipUserInfo(req);
+	async getFacilitators(req: any, body: any,resp:any) {
+		const user:any = await this.userService.ipUserInfo(req);
+		if (!user?.data?.program_users?.[0]?.organisation_id) {
+			return resp.status(400).send({
+				success: false,
+				message: 'Invalid User',
+				data: {},
+			});
+		}
 		const page = isNaN(body.page) ? 1 : parseInt(body.page);
 		const limit = isNaN(body.limit) ? 15 : parseInt(body.limit);
 
@@ -1380,17 +1387,19 @@ export class FacilitatorService {
 
 		const count = mappedResponse.length;
 		const totalPages = Math.ceil(count / limit);
-
-		return {
-			message: 'Facilitator data fetched successfully.',
-			data: {
+  
+		return resp.status(200).send({
+			success: true,
+			message: 'Facilitator data fetched successfully!',
+			data:  {
 				totalCount: count,
 				data: responseWithPagination,
 				limit,
 				currentPage: page,
 				totalPages: `${totalPages}`,
 			},
-		};
+		});
+		
 	}
 
 	async userById(id: any) {
