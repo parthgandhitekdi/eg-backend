@@ -1,11 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { ConfigService } from '@nestjs/config';
 import { AwsRekognitionService } from '../services/aws-rekognition/aws-rekognition.service';
 import { HasuraService } from '../services/hasura/hasura.service';
 
 @Injectable()
-export class CronService {
+export class CronService implements OnModuleInit {
 	constructor(
 		private configService: ConfigService,
 		private awsRekognitionService: AwsRekognitionService,
@@ -227,9 +227,14 @@ export class CronService {
 		}
 	}
 
-	@Cron(CronExpression.EVERY_10_SECONDS)
+	async onModuleInit() {
+		await this.indexRekognitionUsers()
+	}
+
+	// @Cron(CronExpression.EVERY_10_SECONDS)
 	async indexRekognitionUsers() {
 		try {
+			console.log('In function');
 			/*----------------------- Create users in collection -----------------------*/
 
 			// Step-1: Create collection if not exists
@@ -248,108 +253,110 @@ export class CronService {
 			).map((id) => parseInt(id));
 
 			// Step-3: Fetch all users from database which are not present in collection
-			const nonExistingUsers = await this.fetchAllUsersExceptIds(
-				usersIdsExistsInCollection,
-			);
+			// const nonExistingUsers = await this.fetchAllUsersExceptIds(
+			// 	usersIdsExistsInCollection,
+			// );
+			// console.log('Non-existing users count:', nonExistingUsers.length);
 
 			// Step-4: Create users in collection
-			await this.awsRekognitionService.createUsersInCollection(
-				collectionId,
-				nonExistingUsers.map((userObj) => String(userObj.id)),
-			);
+			// await this.awsRekognitionService.createUsersInCollection(
+			// 	collectionId,
+			// // 	nonExistingUsers.map((userObj) => String(userObj.id)),
+			// 	['893'],
+			// );
 
-			/*----------------------- Index faces of users -----------------------*/
+			// /*----------------------- Index faces of users -----------------------*/
 
-			// Step-1: Fetch all users whose fa_user_indexed value is false or null.
-			const usersToIndexFaces = await this.fetchAllUsersToIndexFaces();
+			// // Step-1: Fetch all users whose fa_user_indexed value is false or null.
+			// const usersToIndexFaces = await this.fetchAllUsersToIndexFaces();
 
-			// Step-2: Iterate through them and index faces one by one
-			for (const user of usersToIndexFaces) {
-				let userId = String(user.id);
-				// Step-A Fetch all faceIds of the user
-				await this.awsRekognitionService.getAllFacesOfUser(
-					collectionId,
-					userId,
-				);
+			// // Step-2: Iterate through them and index faces one by one
+			// for (const user of usersToIndexFaces) {
+			// 	let userId = String(user.id);
+			// 	// Step-A Fetch all faceIds of the user
+			// 	await this.awsRekognitionService.getAllFacesOfUser(
+			// 		collectionId,
+			// 		userId,
+			// 	);
 
-				// Step-B Perform indexing of all 3 profile photos if not indexed
-				const faPhotos = JSON.parse(user.fa_photos_indexed);
-				const faFaceIds = JSON.parse(user.fa_face_ids);
-				for (let i = 1; i <= 3; i++) {
-					const photokeyName = `profile_photo_${i}`;
-					const faceIdKeyName = `faceid${i}`;
+			// 	// Step-B Perform indexing of all 3 profile photos if not indexed
+			// 	const faPhotos = JSON.parse(user.fa_photos_indexed);
+			// 	const faFaceIds = JSON.parse(user.fa_face_ids);
+			// 	for (let i = 1; i <= 3; i++) {
+			// 		const photokeyName = `profile_photo_${i}`;
+			// 		const faceIdKeyName = `faceid${i}`;
 
-					// Step-i If photo is already then continue
-					if (faPhotos[photokeyName]) continue;
-					// Step-ii Else perform indexing based on operation
-					else {
-						// Step-a Check if the photo is deleted
-						if (
-							(!user[photokeyName] ||
-								Object.keys(user[photokeyName]).length === 0) &&
-							faFaceIds[faceIdKeyName].trim()
-						) {
-							// Step-a1 Delete photo from collection
-							const photoDeleted = (
-								await this.disassociateAndDeleteFace(
-									collectionId,
-									userId,
-									faFaceIds[faceIdKeyName],
-								)
-							).success;
+			// 		// Step-i If photo is already then continue
+			// 		if (faPhotos[photokeyName]) continue;
+			// 		// Step-ii Else perform indexing based on operation
+			// 		else {
+			// 			// Step-a Check if the photo is deleted
+			// 			if (
+			// 				(!user[photokeyName] ||
+			// 					Object.keys(user[photokeyName]).length === 0) &&
+			// 				faFaceIds[faceIdKeyName].trim()
+			// 			) {
+			// 				// Step-a1 Delete photo from collection
+			// 				const photoDeleted = (
+			// 					await this.disassociateAndDeleteFace(
+			// 						collectionId,
+			// 						userId,
+			// 						faFaceIds[faceIdKeyName],
+			// 					)
+			// 				).success;
 
-							// Step-a2 Set fa_face_ids.faceid(i) to null.
-							if (photoDeleted) faFaceIds[faceIdKeyName] = null;
+			// 				// Step-a2 Set fa_face_ids.faceid(i) to null.
+			// 				if (photoDeleted) faFaceIds[faceIdKeyName] = null;
 
-							// Step-b Else either profile photo is newly added or updated
-						} else {
-							let addPhoto = true;
-							// Step-b1 Check if the faceId is present. If so, then profile photo is updated
-							if (faFaceIds[faceIdKeyName].trim()) {
-								// Step-b1 Delete photo from collection
-								const photoDeleted = (
-									await this.disassociateAndDeleteFace(
-										collectionId,
-										userId,
-										faFaceIds[faceIdKeyName],
-									)
-								).success;
-								addPhoto = photoDeleted;
-							}
+			// 				// Step-b Else either profile photo is newly added or updated
+			// 			} else {
+			// 				let addPhoto = true;
+			// 				// Step-b1 Check if the faceId is present. If so, then profile photo is updated
+			// 				if (faFaceIds[faceIdKeyName].trim()) {
+			// 					// Step-b1 Delete photo from collection
+			// 					const photoDeleted = (
+			// 						await this.disassociateAndDeleteFace(
+			// 							collectionId,
+			// 							userId,
+			// 							faFaceIds[faceIdKeyName],
+			// 						)
+			// 					).success;
+			// 					addPhoto = photoDeleted;
+			// 				}
 
-							// Step-b2 Add and associate new face photo with user
-							if (addPhoto) {
-								const addedPhotoData =
-									await this.addAndAssociatePhotoToUser(
-										collectionId,
-										userId,
-										user[photokeyName].name,
-									);
+			// 				// Step-b2 Add and associate new face photo with user
+			// 				if (addPhoto) {
+			// 					const addedPhotoData =
+			// 						await this.addAndAssociatePhotoToUser(
+			// 							collectionId,
+			// 							userId,
+			// 							user[photokeyName].name,
+			// 						);
 
-								// Step-b3 Set faceid(i) to new created faceId
-								if (addedPhotoData.success)
-									faFaceIds[faceIdKeyName] =
-										addedPhotoData.faceId;
-							}
-						}
+			// 					// Step-b3 Set faceid(i) to new created faceId
+			// 					if (addedPhotoData.success)
+			// 						faFaceIds[faceIdKeyName] =
+			// 							addedPhotoData.faceId;
+			// 				}
+			// 			}
 
-						// Step-c Set profile_photo_i to true
-						faPhotos[photokeyName] = true;
-					}
-				}
+			// 			// Step-c Set profile_photo_i to true
+			// 			faPhotos[photokeyName] = true;
+			// 		}
+			// 	}
 
-				// Step-C Set user as indexed in database
-				await this.markUserAsIndexed(user.id, {
-					photosIndexingData: faPhotos,
-					faceIdsData: faFaceIds,
-				});
-			}
+			// 	// Step-C Set user as indexed in database
+			// 	await this.markUserAsIndexed(user.id, {
+			// 		photosIndexingData: faPhotos,
+			// 		faceIdsData: faFaceIds,
+			// 	});
+			// }
 		} catch (error) {
 			// console.log();
 		}
 	}
 
-	@Cron(CronExpression.EVERY_10_SECONDS)
+	// @Cron(CronExpression.EVERY_10_SECONDS)
 	async markAttendanceCron() {
 		const collectionId = this.configService.get<string>(
 			'AWS_REKOGNITION_COLLECTION_ID',
