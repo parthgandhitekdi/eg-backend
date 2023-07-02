@@ -237,20 +237,20 @@ export class CronService implements OnModuleInit {
 			console.log('In function');
 			/*----------------------- Create users in collection -----------------------*/
 
-			// Step-1: Create collection if not exists
 			const collectionId = this.configService.get<string>(
 				'AWS_REKOGNITION_COLLECTION_ID',
 			);
-			await this.awsRekognitionService.createCollectionIfNotExists(
-				collectionId,
-			);
+			// Step-1: Create collection if not exists
+			// await this.awsRekognitionService.createCollectionIfNotExists(
+			// 	collectionId,
+			// );
 
 			// Step-2: Fetch all userIds exists in collection
-			const usersIdsExistsInCollection = (
-				await this.awsRekognitionService.getAllUsersOfCollection(
-					collectionId,
-				)
-			).map((id) => parseInt(id));
+			// const usersIdsExistsInCollection = (
+			// 	await this.awsRekognitionService.getAllUsersOfCollection(
+			// 		collectionId,
+			// 	)
+			// ).map((id) => parseInt(id));
 
 			// Step-3: Fetch all users from database which are not present in collection
 			// const nonExistingUsers = await this.fetchAllUsersExceptIds(
@@ -265,21 +265,22 @@ export class CronService implements OnModuleInit {
 			// 	['893'],
 			// );
 
-			// /*----------------------- Index faces of users -----------------------*/
+			/*----------------------- Index faces of users -----------------------*/
 
-			// // Step-1: Fetch all users whose fa_user_indexed value is false or null.
+			// Step-1: Fetch all users whose fa_user_indexed value is false or null.
 			// const usersToIndexFaces = await this.fetchAllUsersToIndexFaces();
+			let usersToIndexFaces = [{ id: 893 }];
 
-			// // Step-2: Iterate through them and index faces one by one
-			// for (const user of usersToIndexFaces) {
-			// 	let userId = String(user.id);
-			// 	// Step-A Fetch all faceIds of the user
-			// 	await this.awsRekognitionService.getAllFacesOfUser(
-			// 		collectionId,
-			// 		userId,
-			// 	);
+			// Step-2: Iterate through them and index faces one by one
+			for (const user of usersToIndexFaces) {
+				let userId = String(user.id);
+				// Step-A Fetch all faceIds of the user
+				await this.awsRekognitionService.getAllFacesOfUser(
+					collectionId,
+					userId,
+				);
 
-			// 	// Step-B Perform indexing of all 3 profile photos if not indexed
+			// 	Step-B Perform indexing of all 3 profile photos if not indexed
 			// 	const faPhotos = JSON.parse(user.fa_photos_indexed);
 			// 	const faFaceIds = JSON.parse(user.fa_face_ids);
 			// 	for (let i = 1; i <= 3; i++) {
@@ -350,7 +351,7 @@ export class CronService implements OnModuleInit {
 			// 		photosIndexingData: faPhotos,
 			// 		faceIdsData: faFaceIds,
 			// 	});
-			// }
+			}
 		} catch (error) {
 			// console.log();
 		}
