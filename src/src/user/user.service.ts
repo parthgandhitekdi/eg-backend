@@ -158,7 +158,7 @@ export class UserService {
 
 		let userData = null;
 		if (response?.data?.data?.users[0]) {
-			userData = (await this.userById(+response?.data?.data?.users[0].id))
+			userData = (await this.userById(+response?.data?.data?.users[0]?.id))
 				.data;
 		}
 

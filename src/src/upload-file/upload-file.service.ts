@@ -142,6 +142,14 @@ export class UploadFileService {
 	}
 
 	async addFileNoMeta(file: Express.Multer.File, response: Response) {
+		if (!file?.originalname) {
+			return response.status(400).send({
+				success: false,
+				status: 'Not Found',
+				message: 'Document Not Passed',
+				data: {},
+			});
+		}
 		const originalName = file.originalname
 			.split(' ')
 			.join('')
@@ -208,7 +216,7 @@ export class UploadFileService {
 
 		const hasuraResponse = await this.hasuraService.getData(hasuraData);
 
-		const documentData:any = hasuraResponse?.data?.documents_by_pk;
+		const documentData: any = hasuraResponse?.data?.documents_by_pk;
 		if (!documentData?.name) {
 			return response.status(400).send({
 				success: false,

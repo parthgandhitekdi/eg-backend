@@ -569,7 +569,7 @@ export class BeneficiariesService {
 		};
 
 		const response = await this.hasuraServiceFromServices.getData(data);
-		let result = response?.data?.users_by_pk;
+		let result: any = response?.data?.users_by_pk;
 		if (!result) {
 			return resp.status(404).send({
 				success: false,
@@ -578,7 +578,8 @@ export class BeneficiariesService {
 				data: {},
 			});
 		} else {
-			result.program_beneficiaries = result?.program_beneficiaries?.[0];
+			result.program_beneficiaries =
+				result?.program_beneficiaries?.[0] ?? {};
 			//response mapping convert array to object
 			for (const key of [
 				'profile_photo_1',
@@ -610,13 +611,37 @@ export class BeneficiariesService {
 	}
 
 	public async statusUpdate(req: any) {
-		return await this.hasuraService.update(
-			req.id,
+		const { data: updatedUser } = await this.userById(req?.user_id);
+		if (
+			(req.status !== 'dropout' && req.status !== 'rejected') &&
+			updatedUser?.program_beneficiaries?.status == 'duplicated'
+		) {
+			return {
+				status: 400,
+				success: false,
+				message: `You cant update status to ${req.status} `,
+				data: {},
+			};
+		}
+		const res = await this.hasuraService.update(
+			updatedUser?.program_beneficiaries?.id,
 			'program_beneficiaries',
-			req,
+			{
+				...req,
+				reason_for_status_update: req.reason_for_status_update?.trim()
+					? req.reason_for_status_update?.trim()
+					: req.status,
+			},
 			this.returnFields,
 			[...this.returnFields, 'id'],
 		);
+		return {
+			status: 200,
+			success: true,
+			message: 'Status Updated successfully!',
+			data: (await this.userById(res?.program_beneficiaries?.user_id))
+				.data,
+		};
 	}
 
 	public async registerBeneficiary(body, request) {
@@ -941,6 +966,26 @@ export class BeneficiariesService {
 					};
 
 					await this.hasuraServiceFromServices.getData(data);
+					const data1 = {
+						query: `mutation MyMutation {
+							update_program_beneficiaries(where:{_and:[{user:{aadhar_no:{_eq:"${aadhaar_no}"}}},{user:{id:{_neq:${user_id}}}}]} ,_set:{status:"duplicated",reason_for_status_update:"SYSTEM_DETECTED_DUPLICATES"}){
+							  returning{
+								status
+								reason_for_status_update
+							  }
+							}
+							update_new_ag_status: update_program_beneficiaries(where: {user_id: {_eq:${user_id}}},_set:{status:"duplicated",reason_for_status_update:"duplicated"}){
+							  returning{
+								status
+								reason_for_status_update
+							  }
+							}
+						  }
+						  `,
+					};
+					const result = await this.hasuraServiceFromServices.getData(
+						data1,
+					);
 				}
 				break;
 			}
@@ -1299,10 +1344,13 @@ export class BeneficiariesService {
 					} else {
 						myRequest = {
 							...req,
-							subjects: JSON.stringify(req.subjects).replace(
-								/"/g,
-								'\\"',
-							),
+							subjects:
+								typeof req.subjects == 'object'
+									? JSON.stringify(req.subjects).replace(
+											/"/g,
+											'\\"',
+									  )
+									: null,
 						};
 					}
 				}
@@ -1435,6 +1483,28 @@ export class BeneficiariesService {
 					userArr,
 					update,
 				);
+
+				const { data: updatedUser } = await this.userById(req.id);
+				if (updatedUser.program_beneficiaries.enrollment_number) {
+					if (req?.is_eligible === 'no') {
+						const status = await this.statusUpdate({
+							user_id: req.id,
+							status: 'ineligible_for_pragati_camp',
+							reason_for_status_update:
+								'The age of the learner should not be 14 to 29',
+						});
+					} else if (
+						updatedUser?.program_beneficiaries
+							?.enrollment_aadhaar_no === updatedUser?.aadhar_no
+					) {
+						const status = await this.statusUpdate({
+							user_id: req.id,
+							status: 'enrolled',
+							reason_for_status_update: 'enrolled',
+						});
+					}
+				}
+
 				break;
 			}
 
@@ -1457,9 +1527,13 @@ export class BeneficiariesService {
 						...req,
 						id: programDetails?.id ? programDetails.id : null,
 						user_id: user_id,
-						documents_status: JSON.stringify(
-							req.documents_status,
-						).replace(/"/g, '\\"'),
+						documents_status:
+							typeof req?.documents_status == 'object'
+								? JSON.stringify(req?.documents_status).replace(
+										/"/g,
+										'\\"',
+								  )
+								: null,
 					},
 					userArr,
 					update,
@@ -1574,6 +1648,8 @@ export class BeneficiariesService {
             created_by
             facilitator_id
             id
+            status
+            reason_for_status_update
             academic_year_id
             user_id
             enrollment_number
@@ -1671,7 +1747,7 @@ export class BeneficiariesService {
 		const response = await this.hasuraServiceFromServices.getData(data);
 		let result = response?.data?.users_by_pk;
 		if (result) {
-			result.program_beneficiaries = result.program_beneficiaries?.[0];
+			result.program_beneficiaries = result?.program_beneficiaries?.[0];
 		}
 		return {
 			message: 'User data fetched successfully.',

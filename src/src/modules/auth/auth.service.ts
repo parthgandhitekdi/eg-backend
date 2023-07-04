@@ -125,9 +125,9 @@ export class AuthService {
 		const userRes = await this.hasuraService.postData(query);
 		console.log('userRes', userRes);
 
-		if (userRes.data.users.length > 0) {
-			const mobile = userRes.data.users[0].mobile;
-			const keycloak_id = userRes.data.users[0].keycloak_id;
+		if (userRes?.data?.users?.length > 0) {
+			const mobile = userRes?.data?.users[0]?.mobile;
+			const keycloak_id = userRes?.data?.users[0]?.keycloak_id;
 
 			console.log('mobile', mobile);
 			console.log('keycloak_id', keycloak_id);

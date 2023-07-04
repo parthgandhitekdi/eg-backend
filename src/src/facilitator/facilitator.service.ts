@@ -319,7 +319,7 @@ export class FacilitatorService {
 			'user_id',
 			'device_ownership',
 			'device_type',
-			'refreere'
+			'refreere',
 		];
 		keyExist = coreFacilitatorsArr.filter((e) =>
 			Object.keys(body).includes(e),
@@ -345,7 +345,11 @@ export class FacilitatorService {
 		const keyExist = userArr.filter((e) => Object.keys(body).includes(e));
 		if (keyExist.length) {
 			const tableName = 'users';
-			const newReq = { ...body,id:id, ...(body?.dob == '' && { dob: null }) };
+			const newReq = {
+				...body,
+				id: id,
+				...(body?.dob == '' && { dob: null }),
+			};
 			await this.hasuraService.q(tableName, newReq, userArr, true);
 		}
 	}
@@ -354,16 +358,16 @@ export class FacilitatorService {
 		const aadhaar_no = body.aadhar_no;
 
 		if (
-			typeof aadhaar_no !== 'string'
-			|| !aadhaar_no.trim()
-			|| aadhaar_no.length !== 12
-			|| aadhaar_no.startsWith('1')
-			|| aadhaar_no.startsWith('0')
+			typeof aadhaar_no !== 'string' ||
+			!aadhaar_no.trim() ||
+			aadhaar_no.length !== 12 ||
+			aadhaar_no.startsWith('1') ||
+			aadhaar_no.startsWith('0')
 		) {
 			return {
 				success: false,
 				statusCode: 400,
-				message: 'Invalid Aadhaar number!'
+				message: 'Invalid Aadhaar number!',
 			};
 		}
 
@@ -391,13 +395,14 @@ export class FacilitatorService {
 
 		let hasuraResponse = await this.hasuraService.getData(data);
 
-		const existedUsers = hasuraResponse?.data?.users_aggregate?.aggregate?.count;
+		const existedUsers =
+			hasuraResponse?.data?.users_aggregate?.aggregate?.count;
 
 		if (existedUsers) {
 			return {
 				success: false,
 				statusCode: 400,
-				message: 'Aadhaar number already exists!'
+				message: 'Aadhaar number already exists!',
 			};
 		}
 
@@ -421,7 +426,10 @@ export class FacilitatorService {
 			if (typeof body.mobile === 'string' && !body.mobile.trim()) {
 				body.mobile = null;
 			}
-			if (typeof body.alternative_mobile_number === 'string' && !body.alternative_mobile_number.trim()) {
+			if (
+				typeof body.alternative_mobile_number === 'string' &&
+				!body.alternative_mobile_number.trim()
+			) {
 				body.alternative_mobile_number = null;
 			}
 			body.mobile = body.mobile;
@@ -578,12 +586,13 @@ export class FacilitatorService {
 					)?.reference;
 
 					if (
-							referenceDetails
-						&& 	referenceDetails.document_id !== body.reference_details?.document_id
+						referenceDetails &&
+						referenceDetails.document_id !==
+							body.reference_details?.document_id
 					) {
 						if (referenceDetails?.document_reference?.name) {
 							await this.s3Service.deletePhoto(
-								referenceDetails.document_reference.name,
+								referenceDetails?.document_reference?.name,
 							);
 						}
 
@@ -621,8 +630,10 @@ export class FacilitatorService {
 
 			// Update Documents table data
 			if (
-					(!referenceDetails && body?.reference_details?.document_id)
-				|| 	(body?.reference_details?.document_id && referenceDetails.document_id !== body.reference_details.document_id)
+				(!referenceDetails && body?.reference_details?.document_id) ||
+				(body?.reference_details?.document_id &&
+					referenceDetails.document_id !==
+						body.reference_details.document_id)
 			) {
 				const documentsArr = ['context', 'context_id'];
 				let tableName = 'documents';
@@ -686,8 +697,9 @@ export class FacilitatorService {
 		let qualificationDetails = facilitatorUser.qualifications;
 
 		if (
-				qualificationDetails.qualification_reference_document_id
-			&& 	qualificationDetails.qualification_reference_document_id !== body.qualification_reference_document_id
+			qualificationDetails.qualification_reference_document_id &&
+			qualificationDetails.qualification_reference_document_id !==
+				body.qualification_reference_document_id
 		) {
 			if (qualificationDetails.document_reference?.name) {
 				await this.s3Service.deletePhoto(
@@ -742,8 +754,11 @@ export class FacilitatorService {
 		}
 
 		if (
-				(!qualificationDetails && body?.qualification_reference_document_id)
-			|| 	(body?.qualification_reference_document_id && qualificationDetails.qualification_reference_document_id !== body.qualification_reference_document_id)
+			(!qualificationDetails &&
+				body?.qualification_reference_document_id) ||
+			(body?.qualification_reference_document_id &&
+				qualificationDetails.qualification_reference_document_id !==
+					body.qualification_reference_document_id)
 		) {
 			// Update documents table data
 			const documentsArr = ['context', 'context_id'];
@@ -1078,8 +1093,8 @@ export class FacilitatorService {
 		}
 	}
 
-	async getFacilitators(req: any, body: any,resp:any) {
-		const user:any = await this.userService.ipUserInfo(req);
+	async getFacilitators(req: any, body: any, resp: any) {
+		const user: any = await this.userService.ipUserInfo(req);
 		if (!user?.data?.program_users?.[0]?.organisation_id) {
 			return resp.status(400).send({
 				success: false,
@@ -1387,11 +1402,11 @@ export class FacilitatorService {
 
 		const count = mappedResponse.length;
 		const totalPages = Math.ceil(count / limit);
-  
+
 		return resp.status(200).send({
 			success: true,
 			message: 'Facilitator data fetched successfully!',
-			data:  {
+			data: {
 				totalCount: count,
 				data: responseWithPagination,
 				limit,
@@ -1399,7 +1414,6 @@ export class FacilitatorService {
 				totalPages: `${totalPages}`,
 			},
 		});
-		
 	}
 
 	async userById(id: any) {

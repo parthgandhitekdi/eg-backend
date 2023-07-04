@@ -5,7 +5,7 @@ import {
 export class StatusUpdateDTO {
     @IsString()
     @IsNotEmpty()
-    public id: string;
+    public user_id: string;
 
     @IsString()
     @IsNotEmpty()

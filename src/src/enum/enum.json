@@ -84,18 +84,24 @@
 			"value": "ready_to_enroll"
 		},
 		{ "title": "BENEFICIARY_STATUS_ENROLLED", "value": "enrolled" },
-		{ "title": "BENEFICIARY_STATUS_VERIFIED_IP", "value": "verified_ip" },
+		{
+			"title": "BENEFICIARY_STATUS_ENROLLED_IP_VERIFIED",
+			"value": "enrolled_ip_verified"
+		},
 		{
 			"title": "BENEFICIARY_STATUS_REGISTERED_IN_CAMP",
 			"value": "registered_in_camp"
 		},
-		{ "title": "BENEFICIARY_STATUS_PRAGATI_SYC", "value": "pragati_syc" },
 		{ "title": "BENEFICIARY_STATUS_REJECTED", "value": "rejected" },
 		{ "title": "BENEFICIARY_STATUS_DROPOUT", "value": "dropout" },
 		{ "title": "BENEFICIARY_STATUS_DUPLICATED", "value": "duplicated" },
 		{
 			"title": "BENEFICIARY_STATUS_INELIGIBLE_FOR_PRAGATI_CAMP",
 			"value": "ineligible_for_pragati_camp"
+		},
+		{
+			"title": "BENEFICIARY_STATUS_10TH_PASSED",
+			"value": "10th_passed"
 		}
 	],
 	"TYPE_OF_LEARNER": [
@@ -377,6 +383,10 @@
 		{
 			"title": "CAREER_ASPIRATION_SMALL_BUSINESS",
 			"value": "small_business"
+		},
+		{
+			"title": "CAREER_ASPIRATION_NAUKARI",
+			"value": "job"
 		}
 	],
 	"DOCUMENT_STATUS": [
