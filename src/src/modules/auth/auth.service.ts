@@ -700,6 +700,7 @@ export class AuthService {
 		const newR = await this.hasuraService.q(tableName, req, [
 			'first_name',
 			'last_name',
+			'middle_name',
 			'mobile',
 			'email_id',
 			'dob',
@@ -757,6 +758,7 @@ export class AuthService {
               first_name
               id
               last_name
+              middle_name
               dob
               aadhar_token
               address

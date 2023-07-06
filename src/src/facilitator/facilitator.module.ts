@@ -1,4 +1,4 @@
-import { Module } from "@nestjs/common";
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { HttpModule } from '@nestjs/axios';
 
 import { HasuraModule } from '../services/hasura/hasura.module';
@@ -9,12 +9,23 @@ import { S3Module } from '../services/s3/s3.module';
 
 import { FacilitatorService } from './facilitator.service';
 import { FacilitatorController } from './facilitator.controller';
+import { AuthMiddleware } from '../common/middlewares/authmiddleware';
 
 @Module({
-    imports: [UserModule, HttpModule, HasuraModule, EnumModule, AuthModule, S3Module],
-    providers: [FacilitatorService],
-    controllers: [FacilitatorController],
-    exports: [],
+	imports: [
+		UserModule,
+		HttpModule,
+		HasuraModule,
+		EnumModule,
+		AuthModule,
+		S3Module,
+	],
+	providers: [FacilitatorService],
+	controllers: [FacilitatorController],
+	exports: [],
 })
-export class FacilitatorModule {
+export class FacilitatorModule implements NestModule {
+	configure(consumer: MiddlewareConsumer) {
+		consumer.apply(AuthMiddleware).forRoutes('*');
+	}
 }

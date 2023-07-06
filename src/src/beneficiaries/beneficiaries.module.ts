@@ -1,4 +1,9 @@
-import { Module } from '@nestjs/common';
+import {
+	MiddlewareConsumer,
+	Module,
+	NestModule,
+	RequestMethod,
+} from '@nestjs/common';
 import { UserModule } from 'src/user/user.module';
 import { BeneficiariesController } from './beneficiaries.controller';
 
@@ -9,10 +14,23 @@ import { HelperModule } from '../helper/helper.module';
 import { HasuraModule as HasuraModuleFromServices } from '../services/hasura/hasura.module';
 import { KeycloakModule } from '../services/keycloak/keycloak.module';
 import { BeneficiariesService } from './beneficiaries.service';
+import { AuthMiddleware } from '../common/middlewares/authmiddleware';
 
 @Module({
-  imports:[UserModule, HttpModule, HasuraModule, HelperModule, KeycloakModule, HasuraModuleFromServices, S3Module],
-  controllers: [BeneficiariesController],
-  providers: [BeneficiariesService]
+	imports: [
+		UserModule,
+		HttpModule,
+		HasuraModule,
+		HelperModule,
+		KeycloakModule,
+		HasuraModuleFromServices,
+		S3Module,
+	],
+	controllers: [BeneficiariesController],
+	providers: [BeneficiariesService],
 })
-export class BeneficiariesModule {}
+export class BeneficiariesModule implements NestModule {
+	configure(consumer: MiddlewareConsumer) {
+		consumer.apply(AuthMiddleware).forRoutes('*');
+	}
+}

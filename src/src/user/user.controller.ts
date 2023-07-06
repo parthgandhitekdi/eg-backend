@@ -116,9 +116,9 @@ export class UserController {
 	@Put('update_facilitator/:id')
 	public async updateUser(
 		@Param('id') id: string,
-		@Body() req: Record<string, any>,
+		@Body() body: Record<string, any>,
 	) {
-		return this.userService.update(id, req, 'program_faciltators');
+		return this.userService.update(id, body, 'program_faciltators');
 	}
 
 	// users/login by username and password.
@@ -161,5 +161,20 @@ export class UserController {
 		@Res() response: Response,
 	) {
 		return this.userService.getAadhaarDetails(id, response);
+	}
+
+	@Get('/audit/:context/:context_id')
+	getAuditLogs(
+		@Req() request: any,
+		@Res() response: Response,
+		@Param('context_id') context_id: string,
+		@Param('context') context: number,
+	) {
+		return this.userService.getAuditLogs(
+			context_id,
+			context,
+			request,
+			response,
+		);
 	}
 }

@@ -20,11 +20,25 @@ export class UserService {
 		private helper: UserHelperService,
 		private hasuraService: HasuraService,
 	) {}
-	public async update(userId: string, request: any, tableName: String) {
+
+	public async update(userId: string, body: any, tableName: String) {
 		try {
+			const user: any = await this.hasuraService.getOne(
+				parseInt(userId),
+				'program_faciltators',
+				['id', 'user_id', 'status'],
+			);
+			const oldStatus = user?.program_faciltators?.status;
+			const statusArray = [
+				'shortlisted_for_orientation',
+				'selected_for_training',
+				'pragati_mobilizer',
+				'selected_for_onboarding',
+				'selected_prerak',
+			];
 			var axios = require('axios');
-			const userDataSchema = request;
-			let userData = request;
+			const userDataSchema = body;
+			let userData = body;
 			let query = '';
 			Object.keys(userData).forEach((e) => {
 				if (
@@ -32,13 +46,20 @@ export class UserService {
 					userData[e] != '' &&
 					Object.keys(userDataSchema).includes(e)
 				) {
+					if (
+						e === 'status' &&
+						userData[e] === 'on_hold' &&
+						statusArray.includes(oldStatus)
+					) {
+						return;
+					}
 					query += `${e}: "${userData[e]}", `;
 				}
 			});
 
 			var data = {
 				query: `mutation update($id:Int) {
-			update_${tableName}(where: {id: {_eq: $id}}, _set: {${query}}) {
+			  update_${tableName}(where: {id: {_eq: $id}}, _set: {${query}}) {
 				affected_rows
 			}
 		}`,
@@ -158,8 +179,9 @@ export class UserService {
 
 		let userData = null;
 		if (response?.data?.data?.users[0]) {
-			userData = (await this.userById(+response?.data?.data?.users[0]?.id))
-				.data;
+			userData = (
+				await this.userById(+response?.data?.data?.users[0]?.id)
+			).data;
 		}
 
 		return {
@@ -1046,6 +1068,92 @@ export class UserService {
 				message: 'User not exist',
 				isUserExist: false,
 			};
+		}
+	}
+
+	async addAuditLog(
+		userId,
+		mw_userid,
+		context,
+		context_id,
+		oldData,
+		newData,
+		tempArray,
+	) {
+		let storeOld = {};
+		let storeNew = {};
+		for (let data of tempArray) {
+			if (oldData[data] !== newData[data]) {
+				storeOld[data] = oldData[data];
+				storeNew[data] = newData[data];
+			}
+		}
+		if (
+			Object.keys(storeOld).length !== 0 &&
+			Object.keys(storeNew).length !== 0
+		) {
+			const res = await this.hasuraService.create(
+				'audit_logs',
+				{
+					new_data: JSON.stringify(storeNew).replace(/"/g, '\\"'),
+					old_data: JSON.stringify(storeOld).replace(/"/g, '\\"'),
+					user_id: userId,
+					context: context,
+					context_id: context_id,
+					updated_by_user: mw_userid,
+				},
+				[
+					'id',
+					'user_id',
+					'new_data',
+					'old_data',
+					'context',
+					'context_id',
+					'updated_at',
+					'created_at',
+					'updated_by_user',
+				],
+			);
+			return res;
+		}
+	}
+
+	public async getAuditLogs(context_id, context, req: any, resp: any) {
+		const data = {
+			query: `query MyQuery {
+				audit_logs(where: {_and:[{context_id: {_eq: ${context_id}}},{context:{_eq:"${context}"}}]}) {
+				  context_id
+				  context
+				  created_at
+				  id
+				  new_data
+				  old_data
+				  updated_at
+				  user_id
+				  updated_by_user
+				  user{
+					id
+					first_name
+					last_name
+					middle_name
+				  }
+				}
+			  }`,
+		};
+		const response = await this.hasuraServiceFromServices.getData(data);
+		let result: any = response?.data?.audit_logs;
+		if (!result) {
+			return resp.status(404).send({
+				success: false,
+				message: 'Audit Logs Not Found',
+				data: {},
+			});
+		} else {
+			return resp.status(200).json({
+				success: true,
+				message: 'Audit Logs found successfully!',
+				data: result,
+			});
 		}
 	}
 }

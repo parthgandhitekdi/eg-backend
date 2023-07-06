@@ -48,6 +48,17 @@ export class BeneficiariesController {
 	) {
 		return this.beneficiariesService.findAll(request, req, response);
 	}
+
+	@Post('/admin/list')
+	@UseGuards(new AuthGuard())
+	findAllAgForIp(
+		@Body() request: Record<string, any>,
+		@Req() req: any,
+		@Res() response: Response,
+	) {
+		return this.beneficiariesService.getList(request, req, response);
+	}
+
 	@Get('/getStatuswiseCount')
 	getStatuswiseCount(@Req() request: any, @Res() response: Response) {
 		return this.beneficiariesService.getStatuswiseCount(request, response);
@@ -92,8 +103,15 @@ export class BeneficiariesController {
 	@Put('statusUpdate')
 	@UseGuards(new AuthGuard())
 	@UsePipes(ValidationPipe)
-	async statusUpdate(@Body() request: StatusUpdateDTO, @Res() response: any) {
-		const result = await this.beneficiariesService.statusUpdate(request);
+	async statusUpdate(
+		@Body() body: StatusUpdateDTO,
+		@Res() response: any,
+		@Req() request: any,
+	) {
+		const result = await this.beneficiariesService.statusUpdate(
+			body,
+			request,
+		);
 		return response.status(result.status).json({
 			success: result.success,
 			message: result.message,

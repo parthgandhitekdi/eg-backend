@@ -175,7 +175,7 @@ export class AuthController {
 		return this.authService.verifyAadhaarKyc({ ...req, id: id }, response);
 	}
 
-	@Post('api/okyc2/aadhaar/verify')
+	@Post('/okyc2/aadhaar/verify')
 	@UseGuards(new AuthGuard())
 	private async okyc2AadhaarVerify(
 		@Body() body:any,
@@ -189,7 +189,7 @@ export class AuthController {
 		);
 	}
 
-	@Get('api/okyc2/aadhaar/verify/:id')
+	@Get('/okyc2/aadhaar/verify/:id')
 	@UseGuards(new AuthGuard())
 	private async getOkyc2AadhaarVerificationStatus(
 		@Param('id') id: string,

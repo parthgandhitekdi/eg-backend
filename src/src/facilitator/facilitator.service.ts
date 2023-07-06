@@ -355,8 +355,11 @@ export class FacilitatorService {
 	}
 
 	async updateAadhaarDetails(id: number, body: any) {
-		const aadhaar_no = body.aadhar_no;
+		let aadhaar_no = body.aadhar_no;
 
+		if (typeof aadhaar_no === 'number') {
+			aadhaar_no = String(aadhaar_no);
+		}
 		if (
 			typeof aadhaar_no !== 'string' ||
 			!aadhaar_no.trim() ||

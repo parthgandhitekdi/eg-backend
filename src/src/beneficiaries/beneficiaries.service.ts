@@ -12,6 +12,7 @@ import { HasuraService } from '../hasura/hasura.service';
 import { UserHelperService } from '../helper/userHelper.service';
 import { HasuraService as HasuraServiceFromServices } from '../services/hasura/hasura.service';
 import { KeycloakService } from '../services/keycloak/keycloak.service';
+import { log } from 'util';
 @Injectable()
 export class BeneficiariesService {
 	public url = process.env.HASURA_BASE_URL;
@@ -53,21 +54,27 @@ export class BeneficiariesService {
 			'identified',
 			'ready_to_enroll',
 			'enrolled',
-			'approved_ip',
+			'duplicated',
+			'enrolled_ip_verified',
 			'registered_in_camp',
-			'pragati_syc',
 			'rejected',
+			'ineligible_for_pragati_camp',
 			'dropout',
+			'10th_passed',
 		];
 		let qury = `query MyQuery {
-      ${status.map(
-			(item) => `${item}:program_beneficiaries_aggregate(where: {
-          _and: [
+        ${status.map(
+			(item) => `${
+				!isNaN(Number(item[0])) ? '_' + item : item
+			}:program_beneficiaries_aggregate(where: {
+            _and: [
               {
                 facilitator_id: {_eq: ${user.data.id}}
               },{
-              status: {_eq: ${item}}
-            }
+              status: {_eq: "${item}"}
+            },
+				{ user:	{ id: { _is_null: false } } }
+			
                                      ]
         }) {
         aggregate {
@@ -82,19 +89,132 @@ export class BeneficiariesService {
 		const res = status.map((item) => {
 			return {
 				status: item,
-				count: newQdata?.[item]?.aggregate?.count,
+				count: newQdata?.[!isNaN(Number(item[0])) ? '_' + item : item]
+					?.aggregate?.count,
 			};
 		});
-
 		return resp.status(200).json({
 			success: true,
-			message: 'Benificiaries found successfully!',
+			message: 'Data found successfully!',
 			data: {
 				data: res,
 			},
 		});
 	}
 
+	public async getList(body: any, req: any, resp: any) {
+		const user = await this.userService.ipUserInfo(req);
+		if (!user?.data?.program_users?.[0]?.organisation_id) {
+			return resp.status(404).send({
+				success: false,
+				message: 'Invalid Ip',
+				data: {},
+			});
+		}
+		const sortType = body?.sortType ? body?.sortType : 'desc';
+		const page = isNaN(body.page) ? 1 : parseInt(body.page);
+		const limit = isNaN(body.limit) ? 15 : parseInt(body.limit);
+		let offset = page > 1 ? limit * (page - 1) : 0;
+		let status = body?.status;
+		let filterQueryArray = [];
+		filterQueryArray.push(
+			`{ program_beneficiaries: { facilitator_user: { program_faciltators: { parent_ip: { _eq: "${user?.data?.program_users[0]?.organisation_id}" } } } } }`,
+		);
+		if (body?.district && body?.district !== '') {
+			filterQueryArray.push(`{district:{_eq:${body?.district}}}`);
+		}
+
+		if (body?.block && body?.block !== '') {
+			filterQueryArray.push(`{block:{_eq:${body?.block}}}`);
+		}
+
+		if (body.facilitator && body.facilitator !== '') {
+			filterQueryArray.push(`{
+				program_beneficiaries: {facilitator_id: {_eq: ${body?.facilitator}}}
+			  }`);
+		}
+
+		if (status && status !== '') {
+			if (status === 'identified') {
+				filterQueryArray.push(`{
+					_or: [
+						{ program_beneficiaries: { status: { _eq: "identified" } } },
+						{ program_beneficiaries: { status: { _is_null: true } } },
+						{ program_beneficiaries: { status: { _eq: "" } } },
+					]
+				}`);
+			} else {
+				filterQueryArray.push(
+					`{program_beneficiaries:{status:{_eq:${status}}}}`,
+				);
+			}
+		}
+
+		let filterQuery = '{ _and: [' + filterQueryArray.join(',') + '] }';
+		var data = {
+			query: `query MyQuery($limit:Int, $offset:Int) {
+				users_aggregate(where:${filterQuery}) {
+				  aggregate {
+					count
+				  }
+				}
+				users(where: ${filterQuery},
+				limit: $limit,
+                      offset: $offset,
+                      order_by: {
+                        created_at: ${sortType}
+                      }
+				) {
+					id
+					first_name
+					last_name
+					district
+					block
+					mobile
+				    program_beneficiaries {
+					id
+					facilitator_id
+					status
+					
+				  }
+				}
+			  }`,
+			variables: {
+				limit: limit,
+				offset: offset,
+			},
+		};
+
+		const response = await this.hasuraServiceFromServices.getData(data);
+		let result = response?.data?.users;
+		let mappedResponse = result;
+		const count = response?.data?.users_aggregate?.aggregate?.count;
+		const totalPages = Math.ceil(count / limit);
+		if (!mappedResponse || mappedResponse.length < 1) {
+			return resp.status(200).send({
+				success: false,
+				status: 'Not Found',
+				message: 'Beneficiaries Not Found',
+				data: {},
+			});
+		} else {
+			return resp.status(200).json({
+				success: true,
+				message: 'Benificiaries found success!',
+				data: {
+					totalCount: count,
+					data: mappedResponse?.map((e) => ({
+						...e,
+						['program_beneficiaries']:
+							e?.['program_beneficiaries']?.[0],
+					})),
+					limit,
+					currentPage: page,
+					totalPages: `${totalPages}`,
+				},
+			});
+		}
+	}
 	public async findAll(body: any, req: any, resp: any) {
 		const user = await this.userService.ipUserInfo(req);
 		if (!user?.data?.id) {
@@ -106,12 +226,11 @@ export class BeneficiariesService {
 		}
 		const status = body?.status;
 		const sortType = body?.sortType ? body?.sortType : 'desc';
-		const page = body?.page ? body?.page : '1';
-		const limit = body?.limit ? body?.limit : '10';
-		let offset = 0;
-		if (page > 1 && limit) {
-			offset = parseInt(limit) * (page - 1);
-		}
+		const page = isNaN(body.page) ? 1 : parseInt(body.page);
+		const limit = isNaN(body.limit) ? 15 : parseInt(body.limit);
+
+		let offset = page > 1 ? limit * (page - 1) : 0;
+
 		let query = '';
 		if (status && status !== '') {
 			if (status === 'identified') {
@@ -331,6 +450,10 @@ export class BeneficiariesService {
 
 
                   }`,
+			variables: {
+				limit: limit,
+				offset: offset,
+			},
 		};
 		const response = await this.hasuraServiceFromServices.getData(data);
 		let result = response?.data?.users;
@@ -610,16 +733,17 @@ export class BeneficiariesService {
 		// return this.hasuraService.delete(this.table, { id: +id });
 	}
 
-	public async statusUpdate(req: any) {
-		const { data: updatedUser } = await this.userById(req?.user_id);
+	public async statusUpdate(body: any, request: any) {
+		const { data: updatedUser } = await this.userById(body?.user_id);
 		if (
-			(req.status !== 'dropout' && req.status !== 'rejected') &&
+			body.status !== 'dropout' &&
+			body.status !== 'rejected' &&
 			updatedUser?.program_beneficiaries?.status == 'duplicated'
 		) {
 			return {
 				status: 400,
 				success: false,
-				message: `You cant update status to ${req.status} `,
+				message: `You cant update status to ${body.status} `,
 				data: {},
 			};
 		}
@@ -627,13 +751,35 @@ export class BeneficiariesService {
 			updatedUser?.program_beneficiaries?.id,
 			'program_beneficiaries',
 			{
-				...req,
-				reason_for_status_update: req.reason_for_status_update?.trim()
-					? req.reason_for_status_update?.trim()
-					: req.status,
+				...body,
+				reason_for_status_update: body.reason_for_status_update?.trim()
+					? body.reason_for_status_update?.trim()
+					: body.status,
 			},
 			this.returnFields,
 			[...this.returnFields, 'id'],
+		);
+
+		const newdata = (
+			await this.userById(res?.program_beneficiaries?.user_id)
+		).data;
+		const audit = await this.userService.addAuditLog(
+			body?.user_id,
+			request.mw_userid,
+			'program_beneficiaries.status',
+			updatedUser?.program_beneficiaries?.id,
+			{
+				status: updatedUser?.program_beneficiaries?.status,
+				reason_for_status_update:
+					updatedUser?.program_beneficiaries
+						?.reason_for_status_update,
+			},
+			{
+				status: newdata?.program_beneficiaries?.status,
+				reason_for_status_update:
+					newdata?.program_beneficiaries?.reason_for_status_update,
+			},
+			['status', 'reason_for_status_update'],
 		);
 		return {
 			status: 200,
@@ -1487,21 +1633,27 @@ export class BeneficiariesService {
 				const { data: updatedUser } = await this.userById(req.id);
 				if (updatedUser.program_beneficiaries.enrollment_number) {
 					if (req?.is_eligible === 'no') {
-						const status = await this.statusUpdate({
-							user_id: req.id,
-							status: 'ineligible_for_pragati_camp',
-							reason_for_status_update:
-								'The age of the learner should not be 14 to 29',
-						});
+						const status = await this.statusUpdate(
+							{
+								user_id: req.id,
+								status: 'ineligible_for_pragati_camp',
+								reason_for_status_update:
+									'The age of the learner should not be 14 to 29',
+							},
+							request,
+						);
 					} else if (
 						updatedUser?.program_beneficiaries
 							?.enrollment_aadhaar_no === updatedUser?.aadhar_no
 					) {
-						const status = await this.statusUpdate({
-							user_id: req.id,
-							status: 'enrolled',
-							reason_for_status_update: 'enrolled',
-						});
+						const status = await this.statusUpdate(
+							{
+								user_id: req.id,
+								status: 'enrolled',
+								reason_for_status_update: 'enrolled',
+							},
+							request,
+						);
 					}
 				}
 
@@ -1743,7 +1895,6 @@ export class BeneficiariesService {
           }
         }}`,
 		};
-
 		const response = await this.hasuraServiceFromServices.getData(data);
 		let result = response?.data?.users_by_pk;
 		if (result) {
