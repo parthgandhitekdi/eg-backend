@@ -8,9 +8,11 @@ import {
 import { Response } from 'express';
 import jwt_decode from 'jwt-decode';
 import { lastValueFrom, map } from 'rxjs';
+
 import { HasuraService } from '../hasura/hasura.service';
 import { UserHelperService } from '../helper/userHelper.service';
 import { HasuraService as HasuraServiceFromServices } from '../services/hasura/hasura.service';
+
 @Injectable()
 export class UserService {
 	public url = process.env.HASURA_BASE_URL;
@@ -147,8 +149,21 @@ export class UserService {
 	}
 
 	public async ipUserInfo(request: any) {
+		let userData = null;
+
 		// Get userid from  auth/login jwt token
 		const authToken = request?.headers?.authorization;
+		const authTokenTemp = request?.headers?.authorization.split(' ');
+
+		// Check if token is present as Bearer token
+		if (authTokenTemp[0] !== 'Bearer') {
+			return userData;
+		}
+
+		if (!authTokenTemp[1]) {
+			return userData;
+		}
+
 		const decoded: any = jwt_decode(authToken);
 		let keycloak_id = decoded.sub;
 
@@ -177,7 +192,6 @@ export class UserService {
 
 		const response = await axios(configData);
 
-		let userData = null;
 		if (response?.data?.data?.users[0]) {
 			userData = (
 				await this.userById(+response?.data?.data?.users[0]?.id)

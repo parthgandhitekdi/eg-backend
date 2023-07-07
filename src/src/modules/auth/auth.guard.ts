@@ -1,8 +1,8 @@
 import {
-	CanActivate,
-	ExecutionContext,
-	Injectable,
-	UnauthorizedException,
+    CanActivate,
+    ExecutionContext,
+    Injectable,
+    UnauthorizedException
 } from '@nestjs/common';
 import { Request } from 'express';
 import jwt_decode from 'jwt-decode';
@@ -26,6 +26,10 @@ export class AuthGuard implements CanActivate {
 		const authTokenTemp = request.header('authorization').split(' ');
 
 		// Check if token is present as Bearer token
+		if (authTokenTemp[0] !== 'Bearer') {
+			throw new UnauthorizedException('Bearer token not found');
+		}
+
 		if (!authTokenTemp[1]) {
 			throw new UnauthorizedException('Invalid token');
 		}

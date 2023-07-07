@@ -1,5 +1,5 @@
 import { Injectable, NestMiddleware } from '@nestjs/common';
-import { Request, Response, NextFunction } from 'express';
+import { NextFunction, Response } from 'express';
 import { UserService } from 'src/user/user.service';
 
 @Injectable()
@@ -8,7 +8,7 @@ export class AuthMiddleware implements NestMiddleware {
 	async use(req: any, res: Response, next: NextFunction) {
 		if (req.headers.authorization) {
 			const user = await this.userService.ipUserInfo(req);
-			req.mw_userid = user.data?.id;
+			req.mw_userid = user?.data?.id;
 		} else {
 			req.mw_userid = null;
 		}

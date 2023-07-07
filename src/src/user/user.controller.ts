@@ -1,19 +1,19 @@
 import { HttpService } from '@nestjs/axios';
 import {
-	Body,
-	Controller,
-	Get,
-	HttpCode,
-	Param,
-	Post,
-	Put,
-	Query,
-	Req,
-	Res,
-	UseGuards,
-	UseInterceptors,
-	UsePipes,
-	ValidationPipe,
+    Body,
+    Controller,
+    Get,
+    HttpCode,
+    Param,
+    Post,
+    Put,
+    Query,
+    Req,
+    Res,
+    UseGuards,
+    UseInterceptors,
+    UsePipes,
+    ValidationPipe
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { lastValueFrom, map } from 'rxjs';
@@ -164,6 +164,7 @@ export class UserController {
 	}
 
 	@Get('/audit/:context/:context_id')
+	@UseGuards(new AuthGuard())
 	getAuditLogs(
 		@Req() request: any,
 		@Res() response: Response,
