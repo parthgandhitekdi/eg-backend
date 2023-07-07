@@ -139,8 +139,7 @@
 		{ "title": "ENROLLED", "value": "enrolled" },
 		{ "title": "NOT_ENROLLED", "value": "not_enrolled" },
 		{ "title": "APPLIED_BUT_PENDING", "value": "applied_but_pending" },
-		{ "title": "REJECTED", "value": "rejected" },
-		{ "title": "OTHER", "value": "other" }
+		{ "title": "ENROLLMENT_REJECTED", "value": "enrollment_rejected" }
 	],
 	"ENROLLED_FOR_BOARD": [
 		{ "title": "RSOS", "value": "rsos" },
@@ -198,7 +197,7 @@
 			"value": "no_documents_are_available"
 		}
 	],
-	
+
 	"FACILITATOR_REASONS_FOR_QUIT": [
 		{
 			"title": "FACILITATOR_REASONS_FOR_QUIT_GOT_ANOTHER_JOB",
@@ -492,22 +491,67 @@
 		{ "title": "REMINDERS_1_DAY_BEFORE", "value": "day_1_before" },
 		{ "title": "REMINDERS_1_WEEK_BEFORE", "value": "week_1_before" }
 	],
-	"DROPOUT_REASONS": [
-		{ "title": "DROPOUT_REASONS_FAMILY_ISSUE", "value": "family_issue" },
+	"BENEFICIARY_REASONS_FOR_DROPOUT_REASONS": [
 		{
-			"title": "DROPOUT_REASONS_COMMUNITY_ISSUE",
-			"value": "community_issue"
+			"title": "BENEFICIARY_REASONS_FOR_DROPOUT_REASONS_NODEL_CENTRE_IS_TOO_FAR",
+			"value": "nodel_centre_is_too_far"
 		},
 		{
-			"title": "DROPOUT_REASONS_GETTING_MARRIED",
-			"value": "getting_married"
+			"title": "BENEFICIARY_REASONS_FOR_DROPOUT_REASONS_SINCE_FAILED_IN_THE_EXAMINATION",
+			"value": "since_failed_in_the_examination"
 		},
 		{
-			"title": "DROPOUT_REASONS_PERSONAL_REASONS",
-			"value": "personal_reasons"
+			"title": "BENEFICIARY_REASONS_FOR_DROPOUT_REASONS_DUE_TO_FEAR_OF_THE_STUDIES",
+			"value": "due_to_fear_of_the_studies"
 		},
-		{ "title": "DROPOUT_REASONS_MOVING_AWAY", "value": "moving_away" },
-		{ "title": "DROPOUT_REASONS_OTHER", "value": "other" }
+		{
+			"title": "BENEFICIARY_REASONS_FOR_DROPOUT_REASONS_LEARNER_HAS_NO_WISH_TO_LEARN_FURTHER",
+			"value": "learner_has_no_wish_to_learn_further"
+		},
+		{
+			"title": "BENEFICIARY_REASONS_FOR_DROPOUT_REASONS_SOCIAL_OR_FAMILY_PRESSURE",
+			"value": "social_or_family_pressure"
+		},
+		{
+			"title": "BENEFICIARY_REASONS_FOR_DROPOUT_REASONS_FINANCIAL_ISSUES",
+			"value": "financial_issues"
+		},
+		{
+			"title": "BENEFICIARY_REASONS_FOR_DROPOUT_REASONS_SINCE_FRIENDS_LEFT_THE_SCHOOL",
+			"value": "since_friends_left_the_school"
+		},
+		{
+			"title": "BENEFICIARY_REASONS_FOR_DROPOUT_REASONS_GOT_MARRIED",
+			"value": "got_married"
+		},
+		{
+			"title": "BENEFICIARY_REASONS_FOR_DROPOUT_REASONS_MIGRATION",
+			"value": "migration"
+		},
+		{
+			"title": "BENEFICIARY_REASONS_FOR_DROPOUT_REASONS_NOT_COMFORTABLE_WITH_PRERAK",
+			"value": "not_comfortable_with_prerak"
+		},
+		{
+			"title": "BENEFICIARY_REASONS_FOR_DROPOUT_REASONS_CAMP_IS_TOO_FAR",
+			"value": "camp_is_too_far"
+		},
+		{
+			"title": "BENEFICIARY_REASONS_FOR_DROPOUT_REASONS_ WANT_TDO_THE_SELF_STUDY",
+			"value": "want_to_do_the_self_study"
+		},
+		{
+			"title": "BENEFICIARY_REASONS_FOR_DROPOUT_REASONS_DUE_TO_DOMESTIC_WORK",
+			"value": "due_to_domestic_work"
+		},
+		{
+			"title": "BENEFICIARY_REASONS_FOR_DROPOUT_REASONS_TO_ASSIST_IN_THE_FAMILYS_LIVELIHOOD",
+			"value": "to_assist_in_the_familys_livelihood"
+		},
+		{
+			"title": "BENEFICIARY_REASONS_FOR_DROPOUT_REASONS_OTHER",
+			"value": "other"
+		}
 	],
 	"REACTIVATE_REASONS": [
 		{
@@ -518,7 +562,6 @@
 			"title": "REACTIVATE_REASONS_CONVINCED_BY_PRERAK",
 			"value": "convinced_by_Prerak"
 		},
-		{ "title": "REACTIVATE_REASONS_MOVING_BACK", "value": "moved_back" },
 		{
 			"title": "REACTIVATE_REASONS_ISSUE_RESOLVED",
 			"value": "issue_resolved"

@@ -6,12 +6,14 @@ import { UserService } from 'src/user/user.service';
 import { EnumService } from '../enum/enum.service';
 import { HasuraService } from '../services/hasura/hasura.service';
 import { S3Service } from '../services/s3/s3.service';
+import { HasuraService as HasuraServiceFromServices } from '../services/hasura/hasura.service';
 @Injectable()
 export class FacilitatorService {
 	constructor(
 		private readonly httpService: HttpService,
 		private enumService: EnumService,
 		private hasuraService: HasuraService,
+		private hasuraServiceFromServices: HasuraServiceFromServices,
 		private userService: UserService,
 		private s3Service: S3Service,
 	) {}
@@ -417,6 +419,66 @@ export class FacilitatorService {
 			body.id = id;
 			await this.hasuraService.q(tableName, body, userArr, true);
 		}
+	}
+
+	//status count
+	public async getStatuswiseCount(req: any, resp: any) {
+		const user = await this.userService.ipUserInfo(req);
+		const status = (
+			await this.enumService.getEnumValue('FACILITATOR_STATUS')
+		).data.map((item) => item.value);
+
+		let query = `query MyQuery {
+			all:program_faciltators_aggregate(where: {
+				parent_ip: {_eq: "${user?.data?.program_users[0]?.organisation_id}"},
+				user: {id: {_is_null: false}}
+			}) 
+			{
+				aggregate {
+					count
+				}
+			},
+			
+			applied: program_faciltators_aggregate(
+				where: {
+					parent_ip: {_eq: "${user?.data?.program_users[0]?.organisation_id}"}, 
+					user: {id: {_is_null: false}},
+					_or: [
+						{status: {_nin: ${JSON.stringify(status.filter((item) => item != 'applied'))}}},
+						{ status: { _is_null: true } }
+				 ]
+				}
+			) {
+				aggregate {
+					count
+				}
+			},
+			${status
+				.filter((item) => item != 'applied')
+				.map(
+					(item) => `${item}:program_faciltators_aggregate(where: {
+							parent_ip: {_eq: "${user?.data?.program_users[0]?.organisation_id}"}, user: {id: {_is_null: false}}, status: {_eq: "${item}"}
+						}) {
+						aggregate {
+							count
+						}}`,
+				)}
+		}`;
+		const response = await this.hasuraServiceFromServices.getData({
+			query,
+		});
+		const newQdata = response?.data;
+		const res = ['all', ...status].map((item) => {
+			return {
+				status: item,
+				count: newQdata?.[item]?.aggregate?.count,
+			};
+		});
+		return resp.status(200).json({
+			success: true,
+			message: 'Data found successfully!',
+			data: res,
+		});
 	}
 
 	async updateContactDetails(id: number, body: any, facilitatorUser: any) {

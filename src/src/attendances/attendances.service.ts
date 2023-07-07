@@ -9,7 +9,6 @@ export class AttendancesService {
   public fillable = [
     'user_id',
     'context_id',
-    'context_type',
     'created_by',
     'updated_by',
     'date_time',
@@ -21,7 +20,6 @@ export class AttendancesService {
     'id',
     'user_id',
     'context_id',
-    'context_type',
     'created_by',
     'updated_by',
     'date_time',

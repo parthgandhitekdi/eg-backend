@@ -2,6 +2,7 @@ import {
 	Body,
 	Controller,
 	Delete,
+	Get,
 	Param,
 	Patch,
 	Post,
@@ -12,6 +13,7 @@ import {
 	UsePipes,
 	ValidationPipe,
 } from '@nestjs/common';
+import { Response } from 'express';
 import { SentryInterceptor } from 'src/common/interceptors/sentry.interceptor';
 import { AuthGuard } from '../modules/auth/auth.guard';
 import { FilterFacilitatorDto } from './dto/filter-facilitator.dto';
@@ -21,7 +23,7 @@ import { FacilitatorService } from './facilitator.service';
 @Controller('/facilitators')
 export class FacilitatorController {
 	public url = process.env.HASURA_BASE_URL;
-	constructor(public facilitatorService: FacilitatorService) { }
+	constructor(public facilitatorService: FacilitatorService) {}
 
 	// @Post('/create')
 	// create(@Body() createFacilitatorDto: CreateFacilitatorDto) {
@@ -43,14 +45,24 @@ export class FacilitatorController {
 	//   return this.facilitatorService.update(+id, request);
 	// }
 
+	@Get('/getStatuswiseCount')
+	@UseGuards(new AuthGuard())
+	getStatuswiseCount(@Req() request: any, @Res() response: Response) {
+		return this.facilitatorService.getStatuswiseCount(request, response);
+	}
+
 	@Post('/forOrientation')
 	@UseGuards(new AuthGuard())
 	async getFacilitatorsForOrientation(
 		@Req() request: any,
 		@Body() body: any,
-		@Res() response: any
+		@Res() response: any,
 	) {
-		return this.facilitatorService.getFacilitatorsForOrientation(request, body, response);
+		return this.facilitatorService.getFacilitatorsForOrientation(
+			request,
+			body,
+			response,
+		);
 	}
 
 	@Delete('/experience/:id')
@@ -58,9 +70,9 @@ export class FacilitatorController {
 	removeExperience(
 		@Param('id') id: string,
 		@Req() request: any,
-		@Res() response: any
+		@Res() response: any,
 	) {
-	  return this.facilitatorService.removeExperience(+id, request, response);
+		return this.facilitatorService.removeExperience(+id, request, response);
 	}
 
 	@Patch(':id')
@@ -68,25 +80,28 @@ export class FacilitatorController {
 	update(
 		@Param('id') id: string,
 		@Body() body: Record<string, any>,
-		@Res() response: any
+		@Res() response: any,
 	) {
 		return this.facilitatorService.update(+id, body, response);
 	}
 
 	@Post('/')
 	@UsePipes(ValidationPipe)
-	async getFacilitators(@Req() req: any, @Body() body: FilterFacilitatorDto,@Res() response: any) {
-		return this.facilitatorService.getFacilitators(req, body,response);
+	async getFacilitators(
+		@Req() req: any,
+		@Body() body: FilterFacilitatorDto,
+		@Res() response: any,
+	) {
+		return this.facilitatorService.getFacilitators(req, body, response);
 	}
 
-	
 	@Post('/exportCsv')
 	@UseGuards(new AuthGuard())
 	async exportFileToCsv(
 		@Req() request: any,
 		@Body() body: any,
-		@Res() response: any
+		@Res() response: any,
 	) {
-		return this.facilitatorService.exportFileToCsv(request,body, response);
+		return this.facilitatorService.exportFileToCsv(request, body, response);
 	}
 }

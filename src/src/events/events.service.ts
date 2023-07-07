@@ -245,6 +245,8 @@ export class EventsService {
 		  status
 		  long
 		  rsvp
+		  fa_is_processed
+		  fa_similarity_percentage
 		  user{
 			first_name
 			id
