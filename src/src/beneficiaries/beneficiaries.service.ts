@@ -6,13 +6,13 @@ import {
 	Injectable,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { createObjectCsvStringifier } from 'csv-writer';
 import { S3Service } from 'src/services/s3/s3.service';
 import { UserService } from 'src/user/user.service';
 import { HasuraService } from '../hasura/hasura.service';
 import { UserHelperService } from '../helper/userHelper.service';
 import { HasuraService as HasuraServiceFromServices } from '../services/hasura/hasura.service';
 import { KeycloakService } from '../services/keycloak/keycloak.service';
-import { log } from 'util';
 @Injectable()
 export class BeneficiariesService {
 	public url = process.env.HASURA_BASE_URL;
@@ -46,6 +46,91 @@ export class BeneficiariesService {
 		'created_by',
 		'updated_by',
 	];
+
+	async exportCsv(req: any, body: any, resp: any) {
+		try {
+			const user = await this.userService.ipUserInfo(req);
+
+			const data = {
+				query: `query MyQuery {
+					users(where: {
+						_and: [
+							{ program_beneficiaries: { facilitator_user: { program_faciltators: { parent_ip: { _eq: "${user?.data?.program_users[0]?.organisation_id}" } } } } }
+						]
+					}){
+						first_name
+						last_name
+						dob
+						village
+						mobile
+						block
+						district
+						program_beneficiaries{
+						status
+						enrollment_number
+						facilitator_user{
+							first_name
+							id
+							last_name
+						}
+					  }
+					}
+				  }
+				  `,
+			};
+			const hasuraResponse = await this.hasuraServiceFromServices.getData(
+				data,
+			);
+			const allBeneficiaries = hasuraResponse?.data?.users;
+			const csvStringifier = createObjectCsvStringifier({
+				header: [
+					{ id: 'name', title: 'Name' },
+					{ id: 'district', title: 'District' },
+					{ id: 'block', title: 'Block' },
+					{ id: 'village', title: 'Village' },
+					{ id: 'dob', title: 'DOB' },
+					{ id: 'prerak', title: 'Prerak' },
+					{ id: 'mobile', title: 'Mobile Number' },
+					{ id: 'status', title: 'Status' },
+					{ id: 'enrollment_number', title: 'Enrollment Number' },
+				],
+			});
+
+			const records = [];
+			for (let data of allBeneficiaries) {
+				const dataObject = {};
+				dataObject['name'] = data?.first_name + ' ' + data?.last_name;
+				dataObject['district'] = data?.district;
+				dataObject['block'] = data?.block;
+				dataObject['village'] = data?.village;
+				dataObject['dob'] = data?.dob;
+				dataObject['prerak'] =
+					data?.program_beneficiaries[0]?.facilitator_user
+						?.first_name +
+					' ' +
+					data?.program_beneficiaries[0]?.facilitator_user?.last_name;
+				dataObject['mobile'] = data?.mobile;
+				dataObject['status'] = data?.program_beneficiaries[0]?.status;
+				dataObject['enrollment_number'] =
+					data?.program_beneficiaries[0]?.enrollment_number;
+				records.push(dataObject);
+			}
+			let fileName = `${
+				user?.data?.first_name + '_' + user?.data?.last_name
+			}_${new Date().toLocaleDateString().replace(/\//g, '-')}.csv`;
+			const fileData =
+				csvStringifier.getHeaderString() +
+				csvStringifier.stringifyRecords(records);
+			resp.header('Content-Type', 'text/csv');
+			return resp.attachment(fileName).send(fileData);
+		} catch (error) {
+			return resp.status(500).json({
+				success: false,
+				message: 'File Does Not Export!',
+				data: {},
+			});
+		}
+	}
 
 	//status count
 	public async getStatuswiseCount(req: any, resp: any) {
@@ -120,18 +205,24 @@ export class BeneficiariesService {
 		filterQueryArray.push(
 			`{ program_beneficiaries: { facilitator_user: { program_faciltators: { parent_ip: { _eq: "${user?.data?.program_users[0]?.organisation_id}" } } } } }`,
 		);
-		if (body?.district && body?.district !== '') {
-			filterQueryArray.push(`{district:{_eq:${body?.district}}}`);
+		if (body?.district && body?.district.length > 0) {
+			filterQueryArray.push(
+				`{district:{_in: ${JSON.stringify(body?.district)}}}`,
+			);
 		}
 
-		if (body?.block && body?.block !== '') {
-			filterQueryArray.push(`{block:{_eq:${body?.block}}}`);
+		if (body?.block && body?.block.length > 0) {
+			filterQueryArray.push(
+				`{block:{_in: ${JSON.stringify(body?.block)}}}`,
+			);
 		}
 
-		if (body.facilitator && body.facilitator !== '') {
-			filterQueryArray.push(`{
-				program_beneficiaries: {facilitator_id: {_eq: ${body?.facilitator}}}
-			  }`);
+		if (body.facilitator && body.facilitator.length > 0) {
+			filterQueryArray.push(
+				`{program_beneficiaries: {facilitator_id:{_in: ${JSON.stringify(
+					body.facilitator,
+				)}}}}`,
+			);
 		}
 
 		if (status && status !== '') {
