@@ -13,6 +13,7 @@ import { HasuraService } from '../hasura/hasura.service';
 import { UserHelperService } from '../helper/userHelper.service';
 import { HasuraService as HasuraServiceFromServices } from '../services/hasura/hasura.service';
 import { KeycloakService } from '../services/keycloak/keycloak.service';
+import { log } from 'util';
 @Injectable()
 export class BeneficiariesService {
 	public url = process.env.HASURA_BASE_URL;
@@ -1636,24 +1637,10 @@ export class BeneficiariesService {
 				}
 				if (
 					req.enrollment_status == 'applied_but_pending' ||
-					req.enrollment_status == 'rejected'
+					req.enrollment_status == 'enrollment_rejected'
 				) {
 					myRequest['enrolled_for_board'] = req?.enrolled_for_board;
 					myRequest['enrollment_status'] = req?.enrollment_status;
-				}
-				if (req.enrollment_status == 'other') {
-					let subject;
-					if (req.subjects) {
-						subject = JSON.stringify(req.subjects).replace(
-							/"/g,
-							'\\"',
-						);
-					}
-					myRequest = {
-						...req,
-						...(req.subjects && { subjects: subject }),
-						enrollment_status: req?.enrollment_status,
-					};
 				}
 				await this.hasuraService.q(
 					tableName,
@@ -1734,8 +1721,7 @@ export class BeneficiariesService {
 							request,
 						);
 					} else if (
-						updatedUser?.program_beneficiaries
-							?.enrollment_aadhaar_no === updatedUser?.aadhar_no
+						req?.enrollment_aadhaar_no === updatedUser?.aadhar_no
 					) {
 						const status = await this.statusUpdate(
 							{

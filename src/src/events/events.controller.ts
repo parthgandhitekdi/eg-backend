@@ -39,11 +39,10 @@ export class EventsController {
 	@Get('/list')
 	@UseGuards(new AuthGuard())
 	getEventsList(
-		@Body() body: any,
 		@Req() header: Request,
 		@Res() response: Response,
 	) {
-		return this.eventsService.getEventsList(body, header, response);
+		return this.eventsService.getEventsList( header, response);
 	}
 
 	@Post()
