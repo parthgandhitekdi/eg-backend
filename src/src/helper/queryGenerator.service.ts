@@ -128,6 +128,7 @@ export class QueryGeneratorService {
 								'mobile',
 								'alternative_mobile_number',
 								'dob',
+								'qualification_reference_document_id',
 								'enrollment_number',
 								'payment_receipt_document_id',
 								'enrollment_date',

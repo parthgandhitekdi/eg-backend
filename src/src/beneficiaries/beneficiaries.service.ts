@@ -13,7 +13,6 @@ import { HasuraService } from '../hasura/hasura.service';
 import { UserHelperService } from '../helper/userHelper.service';
 import { HasuraService as HasuraServiceFromServices } from '../services/hasura/hasura.service';
 import { KeycloakService } from '../services/keycloak/keycloak.service';
-import { log } from 'util';
 @Injectable()
 export class BeneficiariesService {
 	public url = process.env.HASURA_BASE_URL;
@@ -48,6 +47,37 @@ export class BeneficiariesService {
 		'updated_by',
 	];
 
+	async isEnrollmentNumberExists(beneficiaryId: string, body: any) {
+		const query = `
+				query MyQuery {
+					program_beneficiaries_aggregate(where: {enrollment_number: {_eq: ${body.enrollment_number}}, id: {_neq: ${beneficiaryId}}}) {
+						aggregate {
+							count
+						}
+					}
+				}
+			`;
+
+		const data_exist = (
+			await this.hasuraServiceFromServices.getData({ query })
+		)?.data?.program_beneficiaries_aggregate;
+
+		// Check wheather user is exist or not based on response
+		if (data_exist && data_exist.aggregate.count > 0) {
+			return {
+				success: false,
+				message: 'Enrollment number exist!',
+				isUserExist: true,
+			};
+		} else {
+			return {
+				success: true,
+				message: 'Enrollment number not exist',
+				isUserExist: false,
+			};
+		}
+	}
+
 	async exportCsv(req: any, body: any, resp: any) {
 		try {
 			const user = await this.userService.ipUserInfo(req);
@@ -62,6 +92,9 @@ export class BeneficiariesService {
 						first_name
 						last_name
 						dob
+						aadhar_no
+						aadhar_verified
+						aadhaar_verification_mode
 						village
 						mobile
 						block
@@ -94,6 +127,9 @@ export class BeneficiariesService {
 					{ id: 'mobile', title: 'Mobile Number' },
 					{ id: 'status', title: 'Status' },
 					{ id: 'enrollment_number', title: 'Enrollment Number' },
+					{ id: 'aadhar_no', title: 'Aadhaar Number' },
+					{ id: 'aadhar_verified', title: 'Aadhaar Number Verified' },
+					{ id: 'aadhaar_verification_mode', title: 'Aadhaar Verification Mode' },
 				],
 			});
 
@@ -115,6 +151,9 @@ export class BeneficiariesService {
 				dataObject['enrollment_number'] =
 					data?.program_beneficiaries[0]?.enrollment_number;
 				records.push(dataObject);
+				dataObject['aadhar_no']=data?.aadhar_no; 
+				dataObject['aadhar_verified']=data?.aadhar_verified ? data?.aadhar_verified:'no';
+				dataObject['aadhaar_verification_mode']=data?.aadhaar_verification_mode;
 			}
 			let fileName = `${
 				user?.data?.first_name + '_' + user?.data?.last_name
@@ -830,6 +869,7 @@ export class BeneficiariesService {
 		if (
 			body.status !== 'dropout' &&
 			body.status !== 'rejected' &&
+			body.status !== 'enrolled' &&
 			updatedUser?.program_beneficiaries?.status == 'duplicated'
 		) {
 			return {
@@ -1546,6 +1586,18 @@ export class BeneficiariesService {
 				break;
 			}
 			case 'edit_enrollement': {
+				// Check enrollment_number duplication
+				if (req.enrollment_number) {
+					const enrollmentExists =
+						await this.isEnrollmentNumberExists(
+							req.id,
+							req,
+						);
+					if (enrollmentExists.isUserExist) {
+						return response.status(422).json(enrollmentExists);
+					}
+				}
+
 				// Update enrollement data in Beneficiaries table
 				const userArr =
 					PAGE_WISE_UPDATE_TABLE_DETAILS.edit_enrollement
@@ -1634,10 +1686,37 @@ export class BeneficiariesService {
 						//delete document from s3 bucket
 						await this.s3Service.deletePhoto(documentDetails?.name);
 					}
+					const allDocumentStatus =
+						beneficiaryUser?.program_beneficiaries
+							?.documents_status;
+
+					let allDocumentsCompleted = false;
+					if (allDocumentStatus && allDocumentStatus !== null) {
+						allDocumentsCompleted = Object.values(
+							JSON.parse(allDocumentStatus),
+						).every((element: any) => {
+							return (
+								element === 'complete' ||
+								element === 'not_applicable'
+							);
+						});
+					}
+					const status = await this.statusUpdate(
+						{
+							user_id: req.id,
+							status: allDocumentsCompleted
+								? 'ready_to_enrolled'
+								: 'identified',
+							reason_for_status_update: allDocumentsCompleted
+								? 'documents_completed'
+								: 'identified',
+						},
+						request,
+					);
 				}
 				if (
 					req.enrollment_status == 'applied_but_pending' ||
-					req.enrollment_status == 'enrollment_rejected'
+					req.enrollment_status == 'enrollment_rejected' 
 				) {
 					myRequest['enrolled_for_board'] = req?.enrolled_for_board;
 					myRequest['enrollment_status'] = req?.enrollment_status;
