@@ -2,6 +2,7 @@ import { HttpService } from '@nestjs/axios';
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { createObjectCsvStringifier } from 'csv-writer';
 import jwt_decode from 'jwt-decode';
+import { AuthService } from 'src/modules/auth/auth.service';
 import { UserService } from 'src/user/user.service';
 import { EnumService } from '../enum/enum.service';
 import { HasuraService, HasuraService as HasuraServiceFromServices } from '../services/hasura/hasura.service';
@@ -10,6 +11,7 @@ import { S3Service } from '../services/s3/s3.service';
 export class FacilitatorService {
 	constructor(
 		private readonly httpService: HttpService,
+		private authService:AuthService,
 		private enumService: EnumService,
 		private hasuraService: HasuraService,
 		private hasuraServiceFromServices: HasuraServiceFromServices,
@@ -904,6 +906,20 @@ export class FacilitatorService {
 				break;
 			}
 			case 'contact_details': {
+				let isMobileExist = await this.hasuraService.findAll('users', {
+					mobile: body?.mobile,
+				});
+				let userExist = isMobileExist?.data?.users;
+				const isDuplicateMobile = userExist.some(
+					(data) => data.id !== id,
+				);
+				if (userExist.length > 0 && isDuplicateMobile) {
+					return response.status(422).send({
+						success: false,
+						message: 'Mobile Number Already Exist',
+						data: {},
+					});
+				}
 				await this.updateContactDetails(id, body, facilitatorUser);
 				break;
 			}
@@ -972,6 +988,17 @@ export class FacilitatorService {
 				break;
 			}
 			case 'aadhaar_details': {
+				let isAdharExist= await this.hasuraService.findAll('users', {aadhar_no:body?.aadhar_no});
+				let userExist = isAdharExist?.data?.users;
+				const isDuplicateAdhar=userExist.some((data)=>data.id!==id)
+				if(userExist.length>0 && isDuplicateAdhar){
+					return response.status(422).send({
+						success: false,
+						message: 'Aadhaar Number Already Exist',
+						data: {},
+					});
+				}
+
 				const result = await this.updateAadhaarDetails(id, body);
 				if (result && !result.success) {
 					return response.status(result.statusCode).json({

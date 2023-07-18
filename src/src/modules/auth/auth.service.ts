@@ -697,7 +697,7 @@ export class AuthService {
 
 	async newCreate(req: any) {
 		const tableName = 'users';
-		const newR = await this.hasuraService.q(tableName, req, [
+		const newR = await this.hasuraService.q(tableName, {...req,aadhar_verified:'pending'}, [
 			'first_name',
 			'last_name',
 			'middle_name',
@@ -706,6 +706,7 @@ export class AuthService {
 			'dob',
 			'keycloak_id',
 			'username',
+			'aadhar_verified'
 		]);
 
 		const user_id = newR[tableName]?.id;

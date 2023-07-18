@@ -81,8 +81,10 @@ export class HasuraService {
               }
             }
             ${tableName}(where:{${query}}) {
+              id
               mobile
               aadhar_token
+              aadhar_no
             }}`,
 		};
 
