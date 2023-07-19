@@ -2032,4 +2032,41 @@ export class BeneficiariesService {
 			duplicateListArr,
 		);
 	}
+
+	public async getAllDuplicatesUnderPo() {
+		const sql = `
+				SELECT
+					bu.aadhar_no AS "aadhar_no",
+					COUNT(*) AS "count"
+				FROM
+					users bu
+				INNER JOIN
+					program_beneficiaries pb
+				ON
+					bu.id = pb.user_id
+				INNER JOIN
+					users fu
+				ON
+					pb.facilitator_id = fu.id
+				LEFT OUTER JOIN
+					program_faciltators pf
+				ON
+					fu.id = pf.user_id
+				WHERE
+					bu.aadhar_no IS NOT NULL
+				GROUP BY
+					bu.aadhar_no
+				HAVING
+					COUNT(*) > 1
+				AND
+					array_length(array_agg(DISTINCT pf.parent_ip), 1) > 1
+				;
+			`;
+		const duplicateListArr = (
+			await this.hasuraServiceFromServices.getDataFromSQL(sql)
+		).result;
+		return this.hasuraServiceFromServices.getFormattedData(
+			duplicateListArr,
+		);
+	}
 }

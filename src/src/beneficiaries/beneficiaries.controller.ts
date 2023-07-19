@@ -76,6 +76,17 @@ export class BeneficiariesController {
 		});
 	}
 
+	@Get('po-duplication')
+	@UseGuards(new AuthGuard())
+	async getAllDuplicatesUnderPo(@Req() request: any, @Res() response: any) {
+		const resultPayload =
+			await this.beneficiariesService.getAllDuplicatesUnderPo();
+		return response.status(200).json({
+			success: true,
+			data: resultPayload,
+		});
+	}
+
 	@Get(':id')
 	@UseGuards(new AuthGuard())
 	findOne(@Param('id') id: string, @Res() response: Response) {
