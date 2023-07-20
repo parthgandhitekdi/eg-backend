@@ -181,6 +181,7 @@ export class UserService {
 		}
 
 		const decoded: any = jwt_decode(authToken);
+		request.mw_role = decoded.resource_access.hasura.roles.filter(role => role !== 'user')[0];
 		let keycloak_id = decoded.sub;
 
 		var axios = require('axios');
@@ -756,11 +757,9 @@ export class UserService {
 		  interviews {
 			id
 			owner_user_id
-			end_date_time
 			comment
 			created_at
 			created_by
-			start_date_time
 			status
 			title
 			updated_at

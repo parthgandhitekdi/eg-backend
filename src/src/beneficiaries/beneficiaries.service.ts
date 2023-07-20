@@ -585,7 +585,7 @@ export class BeneficiariesService {
 		}
 	}
 
-	public async findOne(id: number, resp: any) {
+	public async findOne(id: number, resp?: any) {
 		console.log('id', id);
 		var data = {
 			query: `query searchById {
@@ -786,12 +786,16 @@ export class BeneficiariesService {
 		const response = await this.hasuraServiceFromServices.getData(data);
 		let result: any = response?.data?.users_by_pk;
 		if (!result) {
-			return resp.status(404).send({
-				success: false,
-				status: 'Not Found',
-				message: 'Benificiaries Not Found',
-				data: {},
-			});
+			if (resp) {
+				return resp.status(404).send({
+					success: false,
+					status: 'Not Found',
+					message: 'Benificiaries Not Found',
+					data: {},
+				});
+			} else {
+				return { success: false };
+			}
 		} else {
 			result.program_beneficiaries =
 				result?.program_beneficiaries?.[0] ?? {};
@@ -809,11 +813,18 @@ export class BeneficiariesService {
 					result = { ...result, [key]: {} };
 				}
 			}
-			return resp.status(200).json({
-				success: true,
-				message: 'Benificiaries found successfully!',
-				data: { result: result },
-			});
+			if (resp) {
+				return resp.status(200).json({
+					success: true,
+					message: 'Benificiaries found successfully!',
+					data: { result: result },
+				});
+			} else {
+				return {
+					success: true,
+					data: result
+				};
+			}
 		}
 	}
 
@@ -823,6 +834,44 @@ export class BeneficiariesService {
 
 	remove(id: number) {
 		// return this.hasuraService.delete(this.table, { id: +id });
+	}
+
+	public async deactivateDuplicateAG(AadhaarNo: string, exceptId: number) {
+		const query = `
+				mutation MyMutation {
+					update_program_beneficiaries_many (updates: [
+						{
+							where: {
+								user: {
+									aadhar_no: {_eq: "${AadhaarNo}"},
+									id: {_neq: ${exceptId}}
+								},
+							},
+							_set: { status: "deactivated" }
+						},
+						{
+							where: {
+								user: { id: {_eq: ${exceptId}} },
+							},
+							_set: { status: "activated" }
+						},
+					]) {
+						returning {
+							id
+							status
+							user {
+								id
+								aadhar_no
+							}
+						}
+					}
+				}
+			`;
+		const updateResult = (await this.hasuraServiceFromServices.getData({ query })).data?.update_program_beneficiaries_many;
+		return {
+			success: updateResult ? true : false,
+			data: updateResult ? updateResult : null
+		};
 	}
 
 	public async statusUpdate(body: any, request: any) {

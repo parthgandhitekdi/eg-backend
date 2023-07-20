@@ -76,7 +76,8 @@
 			"title": "FACILITATOR_STATUS_SELECTED_PRERAK",
 			"value": "selected_prerak"
 		},
-		{ "title": "FACILITATOR_STATUS_RUSTICATE", "value": "rusticate" }
+		{ "title": "FACILITATOR_STATUS_RUSTICATE", "value": "rusticate" },
+		{ "title": "FACILITATOR_STATUS_DEACTIVATED", "value": "deactivated" }
 	],
 	"BENEFICIARY_STATUS": [
 		{ "title": "BENEFICIARY_STATUS_IDENTIFIED", "value": "identified" },

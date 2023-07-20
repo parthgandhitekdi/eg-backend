@@ -49,6 +49,46 @@ export class BeneficiariesController {
 		return this.beneficiariesService.findAll(request, req, response);
 	}
 
+	@Post('remove-ag-duplications')
+	@UseGuards(new AuthGuard())
+	async removeAGDuplications(
+		@Body() body: Record<string, any>,
+		@Req() req: any,
+		@Res() response: Record<string, any>,
+	) {
+		const role = req.mw_role;
+		let duplicateArr;
+		// Fetch aadhar number of user to set as active
+		const { aadhar_no } = (await this.beneficiariesService.findOne(+body.activeId)).data;
+
+		// Fetch valid duplication list of the token user
+		if (role === 'program_owner') {
+			duplicateArr = await this.beneficiariesService.getAllDuplicatesUnderPo();
+		} else if (role === 'staff') {
+			duplicateArr = await this.beneficiariesService.getAllDuplicatesUnderIp(req.mw_userid);
+		}
+
+		// Check if the Aadhaar number exists or not in the list
+		if (!duplicateArr.some(aadhaarData => aadhaarData.aadhar_no == aadhar_no)) {
+			return response.status(400).json({
+				success: false,
+				message: 'Invalid Aadhaar!'
+			});
+		}
+
+		// // Set other AGs as deactivated
+		// const { success: updateResponse } = await this.beneficiariesService.deactivateDuplicateAG(aadhar_no, +req.activeId);
+
+
+
+
+
+		// return response.status(200).json({
+		// 	success: true,
+		// 	data: resultPayload,
+		// });
+	}
+
 	@Post('/admin/list')
 	@UseGuards(new AuthGuard())
 	findAllAgForIp(
