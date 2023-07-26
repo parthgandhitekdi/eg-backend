@@ -919,7 +919,28 @@ export class BeneficiariesService {
 		// return this.hasuraService.delete(this.table, { id: +id });
 	}
 
-	public async deactivateDuplicateBeneficiaries(AadhaarNo: string, exceptId: number) {
+	public async deactivateDuplicateBeneficiaries(AadhaarNo: string, exceptId: number, createdBy: number) {
+		// Store previous data before update
+		const getQuery = `
+			mutation MyQuery {
+				users (
+					where: {
+						aadhar_no: {_eq: "${AadhaarNo}"}
+					}
+				) {
+					id
+					aadhar_no
+					is_duplicate
+					is_deactivated
+				}
+			}
+		`;
+
+		const preUpdateData = (await this.hasuraServiceFromServices.getData({ query: getQuery })).data.users;
+		console.log('preUpdateData:', preUpdateData);
+		const preUpdateDataObj = {};
+		preUpdateData.forEach(userData => preUpdateDataObj[userData.id] = userData);
+		console.log('preUpdateDataObj:', preUpdateDataObj);
 		const query = `
 			mutation MyMutation {
 				update_users_many (
@@ -956,6 +977,43 @@ export class BeneficiariesService {
 			}
 		`;
 		const updateResult = (await this.hasuraServiceFromServices.getData({ query }))?.data?.update_users_many;
+
+		// Add audit logs of is_duplicate flag
+		await Promise.allSettled(
+			updateResult.map(updatedData => Promise.allSettled(updatedData.returning.map(updatedUserObj =>
+				this.userService.addAuditLog(
+					updatedUserObj.id,
+					createdBy,
+					'users.is_duplicate',
+					updatedUserObj.id,
+					{
+						is_duplicate: preUpdateDataObj[updatedUserObj.id].is_duplicate,
+						duplicate_reason: preUpdateDataObj[updatedUserObj.id].duplicate_reason,
+					},
+					{
+						is_duplicate: updatedUserObj.is_duplicate,
+						duplicate_reason: updatedUserObj.duplicate_reason,
+					},
+					['is_duplicate', 'duplicate_reason']
+				)
+			)))
+		);
+
+		// Add audit logs of is_deactivated flag
+		await Promise.allSettled(
+			updateResult.map(updatedData => Promise.allSettled(updatedData.returning.map(updatedUserObj =>
+				this.userService.addAuditLog(
+					updatedUserObj.id,
+					createdBy,
+					'users.is_deactivated',
+					updatedUserObj.id,
+					{ is_deactivated: preUpdateDataObj[updatedUserObj.id].is_deactivated },
+					{ is_deactivated: updatedUserObj.is_deactivated },
+					['is_deactivated']
+				)
+			)))
+		);
+
 		return {
 			success: updateResult ? true : false,
 			data: updateResult ? updateResult : null

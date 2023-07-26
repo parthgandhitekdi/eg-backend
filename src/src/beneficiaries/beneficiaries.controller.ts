@@ -99,7 +99,7 @@ export class BeneficiariesController {
 		}
 
 		// Set other AGs as deactivated and set is_duplicate flag to false
-		const { success, data: updateData } = await this.beneficiariesService.deactivateDuplicateBeneficiaries(aadhar_no, +body.activeId);
+		const { success, data: updateData } = await this.beneficiariesService.deactivateDuplicateBeneficiaries(aadhar_no, +body.activeId, req.mw_userid);
 
 		return response.status(200).json({
 			success: success,
