@@ -931,7 +931,8 @@ export class BeneficiariesService {
 							},
 							_set: {
 								is_deactivated: true,
-								is_duplicate: "no"
+								is_duplicate: "no",
+								duplicate_reason: null
 							}
 						},
 						{
@@ -939,7 +940,8 @@ export class BeneficiariesService {
 								id: {_eq: ${exceptId}},
 							},
 							_set: {
-								is_duplicate: "no"
+								is_duplicate: "no",
+								duplicate_reason: null
 							}
 						}
 					]
@@ -1298,9 +1300,61 @@ export class BeneficiariesService {
 				const userArr =
 					PAGE_WISE_UPDATE_TABLE_DETAILS.add_ag_duplication.users;
 				const tableName = 'users';
-				await this.hasuraService.q(tableName, req, userArr, update);
+				const updatedCurrentUser = (await this.hasuraService.q(tableName, req, userArr, update, ['id', 'is_duplicate', 'duplicate_reason'])).users;
+				console.log('updatedCurrentUser:', updatedCurrentUser)
+
+				// Audit duplicate flag history
+				if (updatedCurrentUser?.id) {
+					const audit = await this.userService.addAuditLog(
+						updatedCurrentUser.id,
+						request.mw_userid,
+						'users.is_duplicate',
+						updatedCurrentUser.id,
+						{
+							is_duplicate: beneficiaryUser.is_duplicate,
+							duplicate_reason: beneficiaryUser.duplicate_reason,
+						},
+						{
+							is_duplicate: updatedCurrentUser.is_duplicate,
+							duplicate_reason: updatedCurrentUser.duplicate_reason,
+						},
+						['is_duplicate', 'duplicate_reason'],
+					);
+				}
 
 				if (req.is_duplicate === 'yes') {
+					// Store previous data before update
+					let getQuery = `
+						query MyQuery {
+							users(
+								where: {
+									_and: [
+										{ id: { _neq: ${beneficiaryUser.id} } },
+										{ aadhar_no: { _eq: "${aadhaar_no}" } },
+										{
+											_or: [
+												{ is_duplicate: { _neq: "yes" } },
+												{ is_duplicate: { _is_null: true } }
+												{ duplicate_reason: { _is_null: true } }
+											]
+										}
+									]
+								}
+							) {
+								id
+								aadhar_no
+								is_duplicate
+								duplicate_reason
+							}
+						}
+					`;
+
+					const preUpdateData = (await this.hasuraServiceFromServices.getData({ query: getQuery })).data.users;
+					console.log('preUpdateData:', preUpdateData);
+					const preUpdateDataObj = {};
+					preUpdateData.forEach(userData => preUpdateDataObj[userData.id] = userData);
+					console.log('preUpdateDataObj:', preUpdateDataObj);
+
 					// Mark other beneficiaries as duplicate where duplicate reason is null
 					let updateQuery = `
 						mutation MyMutation {
@@ -1338,7 +1392,28 @@ export class BeneficiariesService {
 						query: updateQuery,
 					};
 
-					await this.hasuraServiceFromServices.getData(data);
+					const updatedDuplicateData = (await this.hasuraServiceFromServices.getData(data)).data.update_users;
+					
+					console.log('updatedDuplicateData:', updatedDuplicateData);
+
+					// Audit duplicate flag history for all duplicate beneficiaries
+					await Promise.allSettled(
+						updatedDuplicateData.returning.map(updatedData => this.userService.addAuditLog(
+							updatedData.id,
+							request.mw_userid,
+							'users.is_duplicate',
+							updatedData.id,
+							{
+								is_duplicate: preUpdateDataObj[updatedData.id].is_duplicate,
+								duplicate_reason: preUpdateDataObj[updatedData.id].duplicate_reason,
+							},
+							{
+								is_duplicate: updatedData.is_duplicate,
+								duplicate_reason: updatedData.duplicate_reason,
+							},
+							['is_duplicate', 'duplicate_reason'],
+						))
+					);
 				}
 				break;
 			}

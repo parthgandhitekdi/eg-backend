@@ -1150,6 +1150,7 @@ export class UserService {
 					'updated_by_user',
 				],
 			);
+			console.log('res:', res);
 			return res;
 		}
 	}

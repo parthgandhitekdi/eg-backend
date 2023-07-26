@@ -207,6 +207,13 @@ export class HasuraService {
     update: boolean = false,
     fields: any = [],
   ) {
+    console.log(this.qgService.mutation(
+      tableName,
+      item,
+      onlyFields,
+      update,
+      fields,
+    ));
     return this.getResponce(
       await lastValueFrom(
         this.httpService

@@ -168,6 +168,12 @@ export class QueryGeneratorService {
 							? [...onlyFields, 'id']
 							: keys,
 				  )
+				: fields.length ? `
+					affected_rows
+					returning {
+						${this.getParam(fields)}
+					}
+				`
 				: 'affected_rows'
 		}
       }
