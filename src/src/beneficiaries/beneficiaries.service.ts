@@ -922,7 +922,7 @@ export class BeneficiariesService {
 	public async deactivateDuplicateBeneficiaries(AadhaarNo: string, exceptId: number, createdBy: number) {
 		// Store previous data before update
 		const getQuery = `
-			mutation MyQuery {
+			query MyQuery {
 				users (
 					where: {
 						aadhar_no: {_eq: "${AadhaarNo}"}
@@ -932,11 +932,12 @@ export class BeneficiariesService {
 					aadhar_no
 					is_duplicate
 					is_deactivated
+					duplicate_reason
 				}
 			}
 		`;
 
-		const preUpdateData = (await this.hasuraServiceFromServices.getData({ query: getQuery })).data.users;
+		const preUpdateData = (await this.hasuraServiceFromServices.getData({ query: getQuery })).data?.users;
 		console.log('preUpdateData:', preUpdateData);
 		const preUpdateDataObj = {};
 		preUpdateData.forEach(userData => preUpdateDataObj[userData.id] = userData);
@@ -972,6 +973,7 @@ export class BeneficiariesService {
 						aadhar_no
 						is_duplicate
 						is_deactivated
+						duplicate_reason
 					}
 				}
 			}
