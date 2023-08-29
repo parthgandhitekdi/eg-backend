@@ -122,27 +122,7 @@ export class QueryGeneratorService {
 					(onlyFields.length < 1 || onlyFields.includes(e))
 				) {
 					if (type === 'obj') {
-						if (
-							typeof item[e] !== 'string' &&
-							[
-								'mobile',
-								'alternative_mobile_number',
-								'dob',
-								'qualification_reference_document_id',
-								'enrollment_number',
-								'payment_receipt_document_id',
-								'enrollment_date',
-								'enrollment_dob',
-								'enrolled_for_board',
-								'subjects',
-								'enrollment_first_name',
-								'enrollment_middle_name',
-								'enrollment_last_name',
-								'enrollment_aadhaar_no',
-								'documents_status',
-								'is_eligible',
-							].includes(e)
-						) {
+						if (typeof item[e] !== 'string') {
 							strArr = [...strArr, `${e}:${item[e]}`];
 						} else {
 							strArr = [...strArr, `${e}:"${item[e]}"`];
@@ -168,7 +148,8 @@ export class QueryGeneratorService {
 							? [...onlyFields, 'id']
 							: keys,
 				  )
-				: fields.length ? `
+				: fields.length
+				? `
 					affected_rows
 					returning {
 						${this.getParam(fields)}
